@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DuckWake: continuous SQL over Kafka into DuckLake, exactly once</title>
+  <meta name="description" content="Write a view in SQL; DuckWake keeps a DuckLake table up to date with it as events arrive from Kafka. Each epoch commits rows, state and offsets in one transaction, so a crash never loses or duplicates output.">
+  <meta property="og:title" content="DuckWake">
+  <meta property="og:description" content="Continuous SQL over Kafka into DuckLake, exactly once.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://duckwake.github.io/">
+  <meta property="og:image" content="https://duckwake.github.io/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.ico" sizes="48x48">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0E1A24">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav wrap" aria-label="Main">
+      <a class="brand" href="./"><img src="assets/duckwake-horizontal-reversed.svg" alt="DuckWake" width="180" height="40"></a>
+      <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#quick-start">Quick start</a>
+        <a href="about.html">About</a>
+        <a class="nav-gh" href="#status">Status</a>
+      </div>
+    </nav>
+    <img class="hero-duck" src="assets/duckwake-symbol-reversed.svg" alt="" aria-hidden="true">
+    <div class="wrap hero-body">
+      <p class="eyebrow">Proof of concept · v0.1.0 · built on DuckDB 2.0 and DuckLake 1.1</p>
+      <h1>Continuous SQL over Kafka into DuckLake, exactly once.</h1>
+      <p class="lede">You write a view in SQL; DuckWake keeps a DuckLake table up to date with it as events arrive. No streaming cluster: one worker next to DuckDB, and the result is an ordinary lake table.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#quick-start">Quick start</a>
+        <a class="btn btn-ghost" href="#how">How it works</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="wrap section intro">
+      <div class="intro-text">
+        <h2>A view in, a fresh table out</h2>
+        <p>Register a Kafka topic as a source, create a view over it, and start it. DuckWake runs the view in micro-batches (epochs) and commits each one to the DuckLake table named after the view. Any DuckDB client can read it.</p>
+      </div>
+<pre class="code" aria-label="Example: a view that counts clicks per minute"><code><span class="c">-- clicks per game, per minute, kept fresh from Kafka</span>
+<span class="k">CALL</span> duckwake_create_view(<span class="s">'analytics.clicks_per_min'</span>,
+  <span class="s">'SELECT window_start, game_id, count(*) AS n,
+          sum(amount) AS revenue
+   FROM TUMBLE(clicks, ts, INTERVAL 1 MINUTE)
+   GROUP BY ALL'</span>);
+<span class="k">CALL</span> duckwake_start(<span class="s">'clicks_per_min'</span>);
+
+<span class="c">-- an ordinary DuckLake table</span>
+<span class="k">FROM</span> lake.analytics.clicks_per_min;</code></pre>
+    </section>
+
+    <section class="section band" id="how">
+      <div class="wrap">
+        <h2>How exactly-once works</h2>
+        <p class="section-lede">Every epoch is one DuckLake transaction. It holds the view's new rows, the view's state and the Kafka offsets it read, so they commit together or not at all.</p>
+        <ol class="flow">
+          <li><span class="flow-n">1</span><h3>Read</h3><p>Take the next batch of events from Kafka and decode them (JSON, Arrow decoder by default).</p></li>
+          <li><span class="flow-n">2</span><h3>Stage</h3><p>Compute only what changed: the view runs as an incremental operator circuit in the DBSP model.</p></li>
+          <li><span class="flow-n">3</span><h3>Commit</h3><p>Write rows, state and offsets in one transaction. After a crash the worker resumes from the last commit.</p></li>
+        </ol>
+        <p class="note">A crash never loses or duplicates output. <code>duckwake_verify(view)</code> checks a view against the same SQL run as one batch query, and every test in the repository does the same.</p>
+      </div>
+    </section>
+
+    <section class="wrap section">
+      <h2>What a view can do today</h2>
+      <ul class="features">
+        <li><h3>Filter and project</h3><p>Plain <code>WHERE</code> and <code>SELECT</code> over a Kafka source.</p></li>
+        <li><h3>Join lake tables</h3><p>Lookup joins from the stream to DuckLake tables.</p></li>
+        <li><h3>Windows</h3><p>Tumbling and hopping windows with <code>TUMBLE</code> and <code>HOP</code>, closed by the watermark.</p></li>
+        <li><h3>Aggregates</h3><p><code>count</code>, <code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code>, windowed or as running totals per group.</p></li>
+        <li><h3>DISTINCT and UNION ALL</h3><p><code>SELECT DISTINCT</code>, and <code>UNION ALL</code> across several sources.</p></li>
+        <li><h3>Late and bad events</h3><p>Late events and undecodable messages go to their own tables instead of disappearing.</p></li>
+      </ul>
+      <p class="note">The operators also accept sources that delete and update rows, ready for CDC; no such source exists yet.</p>
+    </section>
+
+    <section class="section band" id="run">
+      <div class="wrap">
+        <h2>Three ways to run it</h2>
+        <div class="ways">
+          <div class="way"><code>duckwaked</code><span>A server: a worker plus the <code>duckwake_*</code> SQL functions, served over Quack, with Prometheus metrics. Also a Docker image.</span></div>
+          <div class="way"><code>LOAD duckwake</code><span>The extension, in your own DuckDB 2.0: the same functions and a worker in that process.</span></div>
+          <div class="way"><code>duckwake</code><span>A CLI with a command per function, and a playground web UI.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="quick-start">
+      <h2>Quick start</h2>
+      <p class="section-lede">The repository is not public yet; this is how it runs once it is. You need Docker (for PostgreSQL, the lake's catalog, and Redpanda, the Kafka) and Rust.</p>
+<pre class="code"><code>docker compose up -d --wait
+cargo build --release          <span class="c"># the first build compiles DuckDB (~6 min)</span>
+target/release/duckwaked --worker w1 --quack-token secret</code></pre>
+      <p>Then, in the DuckDB 2.0 CLI:</p>
+<pre class="code"><code><span class="k">ATTACH</span> <span class="s">'quack:localhost:9494'</span> <span class="k">AS</span> dw (TOKEN <span class="s">'secret'</span>);
+<span class="k">CONNECT</span> dw;
+<span class="k">CALL</span> duckwake_create_source(<span class="s">'clicks'</span>, <span class="s">'kafka'</span>, <span class="s">'{"brokers":"localhost:19092","topic":"clicks",
+  "event_time":"ts","columns":{"ts":"TIMESTAMP","game_id":"VARCHAR","amount":"DECIMAL(18,2)"}}'</span>);
+<span class="k">CALL</span> duckwake_create_view(<span class="s">'analytics.clicks_per_min'</span>,
+  <span class="s">'SELECT window_start, game_id, count(*) AS n, sum(amount) AS revenue
+   FROM TUMBLE(clicks, ts, INTERVAL 1 MINUTE) GROUP BY ALL'</span>);
+<span class="k">CALL</span> duckwake_start(<span class="s">'clicks_per_min'</span>);
+<span class="k">FROM</span> duckwake_jobs();                 <span class="c">-- epoch, watermark, freshness, lag</span>
+<span class="k">FROM</span> lake.analytics.clicks_per_min;  <span class="c">-- an ordinary DuckLake table</span></code></pre>
+      <p class="note"><code>target/release/duckwake produce --rate 2000</code> sends test events to the <code>clicks</code> topic. The full reference of the <code>duckwake_*</code> functions will be published with the source code.</p>
+    </section>
+
+    <section class="section band" id="numbers">
+      <div class="wrap">
+        <h2>Measured</h2>
+        <p class="section-lede">One worker on a MacBook (Apple Silicon, 10 cores), the playground's mix of views, with the four worker flags on. The benchmark script and the full tables will be published with the source code.</p>
+        <div class="stats">
+          <div class="stat"><span class="stat-n">108k</span><span class="stat-l">events/s through a backlog, 1 view</span></div>
+          <div class="stat"><span class="stat-n">40.5k</span><span class="stat-l">events/s through a backlog, 16 views</span></div>
+          <div class="stat"><span class="stat-n">327 ms</span><span class="stat-l">median commit per 2 s epoch, 16 views at a steady 20k events/s</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="status">
+      <h2>Status</h2>
+      <p>A proof of concept. Kafka with JSON only. Not yet: <code>CREATE CONTINUOUS VIEW</code> DDL, a signed extension, and stream–stream joins.</p>
+      <ol class="roadmap">
+        <li><strong>P1 · Safety net.</strong> CI runs the unit tests and the integration suites on every push.</li>
+        <li><strong>P2 · A real environment.</strong> Automatic failover, Kafka SASL and TLS, object storage, secrets.</li>
+        <li><strong>P3 · Load and failure.</strong> A 24 h soak, failure drills, upgrades and sizing.</li>
+        <li><strong>P4 · Operable.</strong> Runbook, alerts and dashboard, schema changes, limits, distribution.</li>
+      </ol>
+      <p class="note">Each stage ends at a gate that must pass before the next one starts. The source code and the full plan will be published when the repository opens.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <img src="assets/duckwake-horizontal-reversed.svg" alt="DuckWake" width="144" height="32">
+      <nav class="footer-links" aria-label="Footer">
+        <a href="#how">How it works</a>
+        <a href="#quick-start">Quick start</a>
+        <a href="#numbers">Measured</a>
+        <a href="#status">Status</a>
+        <a href="about.html">About</a>
+      </nav>
+      <p class="footer-note">Built on DuckDB and DuckLake. DuckWake is not affiliated with the DuckDB Foundation.</p>
+    </div>
+  </footer>
+</body>
+</html>

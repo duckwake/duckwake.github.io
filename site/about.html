@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About DuckWake</title>
+  <meta name="description" content="Why DuckWake exists: fresh lake tables from Kafka should take one SQL view and one DuckLake transaction per epoch, not a streaming platform.">
+  <meta property="og:title" content="About DuckWake">
+  <meta property="og:description" content="Fresh lake tables from Kafka should take one SQL view, not a streaming platform.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://duckwake.github.io/about.html">
+  <meta property="og:image" content="https://duckwake.github.io/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.ico" sizes="48x48">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0E1A24">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero page-hero">
+    <nav class="nav wrap" aria-label="Main">
+      <a class="brand" href="./"><img src="assets/duckwake-horizontal-reversed.svg" alt="DuckWake" width="180" height="40"></a>
+      <div class="nav-links">
+        <a href="./#how">How it works</a>
+        <a href="./#quick-start">Quick start</a>
+        <a href="about.html" aria-current="page">About</a>
+        <a class="nav-gh" href="./#status">Status</a>
+      </div>
+    </nav>
+    <div class="wrap hero-body">
+      <p class="eyebrow">About DuckWake</p>
+      <h1>Fresh tables shouldn’t need a platform.</h1>
+    </div>
+  </header>
+
+  <main>
+    <article class="wrap section story">
+      <p class="story-lead">It is a Monday morning. The dashboard says revenue per game is flat, and someone asks why. The events behind it reached Kafka a minute ago. The table the dashboard reads was last rebuilt overnight.</p>
+
+      <p>Almost every data team has lived some version of this. The data exists; it just isn’t where people look. The usual fixes all cost something. You can schedule the batch job more often, and accept that the day it fails halfway it will drop rows or write some of them twice. Or you can adopt a streaming platform: a cluster, state backends, checkpoint tuning, a second language next to SQL, and somebody on call for all of it.</p>
+
+      <p>Both paths share one assumption: that fresh data needs heavy machinery. For a lot of teams that assumption is the real problem. Their data fits on one machine, and their analytics already runs in one process. They only want a table that keeps up.</p>
+
+      <h2>The idea</h2>
+
+      <p>DuckDB showed that serious analytics can live in a single process. DuckLake added something just as important: a lake whose catalog sits in a database, so every commit to the lake is a transaction.</p>
+
+      <p>That second part changes the hard question. Exactly-once output is usually a distributed-systems problem, with coordinated checkpoints and two-phase commits between systems that do not trust each other. But if a view’s new rows, the view’s own state and the Kafka offsets it read are all written in one DuckLake transaction, either all three are saved or none of them are. After a crash, the worker resumes from the last commit. Nothing is lost, and nothing is written twice. Exactly-once becomes a property of a commit.</p>
+
+      <blockquote class="pull">One SQL view. One worker next to DuckDB. One DuckLake transaction per epoch.</blockquote>
+
+      <p>The rest follows from taking that idea seriously. DuckWake runs a view in small batches called epochs. It doesn’t recompute everything each time: the view is compiled into an incremental operator circuit in the DBSP model, the approach Feldera uses, so each epoch computes only what changed. The output is an ordinary DuckLake table. Any DuckDB client can read it, with nothing new to install.</p>
+
+      <h2>Who it is for</h2>
+
+      <p>DuckWake is for data engineers who already like DuckDB and DuckLake. They would rather read a <code>SELECT</code> than a job graph, and they want a dashboard that is a few seconds old, not a night old, without taking on a platform to get there. It is not for teams that need a multi-node cluster for millions of events per second. Those teams have good tools already, and DuckWake does not try to be one of them.</p>
+
+      <h2>What we hold ourselves to</h2>
+
+      <ul class="commitments">
+        <li><strong>Prove it, don’t claim it.</strong> Every view in the test suites is checked against the same SQL run as one batch query, and <code>duckwake_verify</code> lets you run that check on your own views. The crash test kills the worker with <code>kill -9</code> and aborts it mid-transaction, before and after <code>COMMIT</code>, then checks that the output still matches exactly.</li>
+        <li><strong>Say what it does, with numbers.</strong> We publish measurements together with the machine and the flags they came from. We don’t publish adjectives.</li>
+        <li><strong>Name the limits.</strong> When something isn’t supported yet, we say so and say why. A limit stated plainly costs less than a surprise in production.</li>
+        <li><strong>Stay small.</strong> One process, plain SQL, ordinary tables. The lake remains the source of truth, and DuckWake is only the thing that keeps it fresh.</li>
+      </ul>
+
+      <h2>Where it stands</h2>
+
+      <p>DuckWake is a proof of concept, at version 0.1.0, built on DuckDB 2.0 and DuckLake 1.1. It reads JSON from Kafka and supports filters, joins to lake tables, windows, aggregates, <code>DISTINCT</code> and <code>UNION ALL</code>. The road to production runs through four stages, from continuous integration to failover, load and failure drills, and a runbook. Each stage ends at a gate that must pass before the next one starts. The source code and the full plan will be published when the repository opens.</p>
+
+      <p class="story-end">DuckWake is built on DuckDB and DuckLake and is not affiliated with the DuckDB Foundation.</p>
+
+      <div class="actions story-actions">
+        <a class="btn btn-primary" href="./#how">How exactly-once works</a>
+        <a class="btn btn-outline" href="./#quick-start">Quick start</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <img src="assets/duckwake-horizontal-reversed.svg" alt="DuckWake" width="144" height="32">
+      <nav class="footer-links" aria-label="Footer">
+        <a href="./#how">How it works</a>
+        <a href="./#quick-start">Quick start</a>
+        <a href="./#numbers">Measured</a>
+        <a href="about.html">About</a>
+      </nav>
+      <p class="footer-note">Built on DuckDB and DuckLake. DuckWake is not affiliated with the DuckDB Foundation.</p>
+    </div>
+  </footer>
+</body>
+</html>
