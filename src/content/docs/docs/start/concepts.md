@@ -1,0 +1,93 @@
+---
+title: Concepts
+description: Sources, views, epochs, watermarks, the change feed and workers, and how exactly-once output follows from one DuckLake transaction per epoch.
+---
+
+DuckWake runs SQL views continuously. You declare where events come from and what to compute; DuckWake keeps
+a DuckLake table equal to that query as new events arrive. This page explains the words the rest of the docs
+use.
+
+## Sources and views
+
+A **source** is a Kafka topic with a schema: its columns and types, the column that holds each event's time
+(`event_time`), and how late events may arrive (`watermark_delay`). Sources hold no data; they tell views how to
+read a topic.
+
+A **view** is a `SELECT` over sources, lake tables or other views. It is named by the DuckLake table it keeps up
+to date: `analytics.clicks_per_min` is both the view and the table `lake.analytics.clicks_per_min`. Anyone
+reads that table like any other; DuckWake is the only writer.
+
+```sql
+SELECT window_start, game_id, count(*) AS n
+FROM TUMBLE(clicks, ts, INTERVAL 1 MINUTE)
+GROUP BY ALL
+```
+
+A view can filter and project, join a stream to lake tables (a lookup, read as the table is when each event is
+processed), aggregate globally or over tumbling (`TUMBLE`) and hopping (`HOP`) windows, and use `DISTINCT` and
+`UNION ALL`. `duckwake_explain(view)` shows how DuckWake runs a given query.
+
+## Epochs
+
+A worker runs each view in **epochs**, small batches a few seconds apart (`epoch_interval`, 10 s by default,
+with at most `max_rows` events each, 100,000 by default). In one epoch, for each view, it:
+
+1. **reads** the next events from Kafka (or the next changes of a lake table) and decodes them;
+2. **stages** only what changed: the view is compiled into an incremental operator circuit (the DBSP model),
+   so an aggregate updates the groups that got new rows instead of recomputing everything;
+3. **commits** the view's new rows, its state (running totals, open windows) and the offsets it read, in one
+   DuckLake transaction.
+
+## Exactly once
+
+Because rows, state and offsets are written in the same transaction, they are saved together or not at all.
+If a worker crashes mid-epoch, the transaction never committed, so the next worker starts from the last
+committed offsets and state and computes the same epoch again. No event is lost, and none is counted twice.
+
+There is no separate checkpoint store to keep in step with the output, and no two-phase commit between
+systems: exactly-once is a property of a DuckLake commit. `duckwake_verify(view)` proves it for any view by
+running the view's SQL as one batch query over everything it has read and comparing the result with its table.
+Every test suite in the repository ends with that check, including the ones that kill workers mid-epoch.
+
+## Watermarks, windows and late events
+
+Events arrive out of order. A view's **watermark** says how far event time has progressed: the earliest of the
+partitions' newest event times, minus the source's `watermark_delay`. Partitions that go quiet are left out
+after an idle timeout, so one idle partition does not hold every window open.
+
+A window is written to the view's table once the watermark passes its end, and is then final. An event for a
+window that has already closed is **late**: it goes to the view's late-data table (`late_data :=`) instead of
+disappearing, and messages that cannot be decoded go to the dead-letter table (`lake.__duckwake.dead_letter`). If late events are common, the
+source's `watermark_delay` is shorter than the events' real disorder.
+
+## Views over views and lake tables
+
+A view can read another view's table, or any DuckLake table, instead of a Kafka source. It reads the table's
+**change feed**: the rows inserted, updated and deleted since the last snapshot it read. When a row it already
+counted is updated or deleted, the view takes it back out, so filters, `DISTINCT` and `GROUP BY` views stay
+correct.
+
+A new view over lake inputs **backfills**: it first reads the rows its inputs already hold, as they were when
+the view was created, then follows the changes after that. Maintenance never expires a snapshot a view still
+needs. Windowed views need their lake inputs insert-only, because a closed window is final.
+
+## Workers
+
+A **worker** runs views: `duckwaked`, `duckwake run`, or `duckwake_worker_start()` in the extension. All state is
+in the lake, so workers are interchangeable. They heartbeat into the lake; when one dies, live workers take its
+views and continue from their last commits. A new worker takes a share of the views by measured load, and
+`duckwake_drain` empties one before maintenance. Each view holds a lease, so two workers never commit the same
+view.
+
+## Changing views
+
+`duckwake_alter_view` changes how a view runs (epoch interval, limits) without recomputing it. A changed query
+needs a replace, which recomputes the view from the start; adding a column to a source does not touch the views
+that read it. With [dbt-duckwake](/docs/guides/dbt/), a plain `dbt run` never recomputes a view, and a changed
+query waits for `--full-refresh`.
+
+## Next
+
+- [Quick start](/docs/start/quick-start/): try it.
+- [SQL functions](/docs/reference/sql/): every function and option.
+- [Design documents](/docs/design/): the reasoning in depth, with comparisons to other streaming engines.

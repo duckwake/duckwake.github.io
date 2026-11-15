@@ -1,0 +1,147 @@
+---
+title: DuckWake
+description: Write a view in SQL; DuckWake keeps a DuckLake table up to date with it as events arrive from Kafka, exactly once.
+template: splash
+hero:
+  title: Continuous SQL over Kafka into DuckLake, <span class="dw-accent">exactly once.</span>
+  tagline: You write a view in SQL; DuckWake keeps a DuckLake table up to date with it as events arrive. No streaming cluster to run, and the result is an ordinary lake table that any DuckDB client reads.
+  image:
+    light: ../../assets/duckwake-symbol.svg
+    dark: ../../assets/duckwake-symbol-reversed.svg
+    alt: The DuckWake duck, with its wake carved through it
+  actions:
+    - text: Quick start
+      link: /docs/start/quick-start/
+      icon: right-arrow
+      variant: primary
+    - text: How it works
+      link: /docs/start/concepts/
+      variant: secondary
+    - text: GitHub
+      link: https://github.com/duckwake/duckwake
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<p class="dw-eyebrow">Open source (MIT) · built on DuckDB 2.0 and DuckLake 1.1</p>
+
+## A view in, a fresh table out
+
+Register a Kafka topic as a source and create a view over it. DuckWake runs the view in small batches, called
+epochs, and commits each one to the DuckLake table named after the view. Write it as SQL calls, or as a dbt
+model next to the rest of your project.
+
+<Tabs syncKey="authoring">
+<TabItem label="SQL">
+
+```sql
+-- Clicks per game, per minute, kept fresh from Kafka
+CALL duckwake_create_view('analytics.clicks_per_min',
+  'SELECT window_start, game_id, count(*) AS n, sum(amount) AS revenue
+   FROM TUMBLE(clicks, ts, INTERVAL 1 MINUTE)
+   GROUP BY ALL');
+CALL duckwake_start('clicks_per_min');
+
+-- An ordinary DuckLake table
+FROM lake.analytics.clicks_per_min;
+```
+
+</TabItem>
+<TabItem label="dbt">
+
+```sql title="models/analytics/clicks_per_min.sql"
+{{ config(materialized='streaming_view', epoch_interval='2s') }}
+SELECT window_start, game_id, count(*) AS n, sum(amount) AS revenue
+FROM TUMBLE({{ ref('clicks') }}, ts, INTERVAL 1 MINUTE)
+GROUP BY ALL
+```
+
+`dbt run` creates and starts the view; a later run leaves it alone unless its settings or query changed.
+See [dbt-duckwake](/docs/guides/dbt/).
+
+</TabItem>
+</Tabs>
+
+## Exactly once, by construction
+
+Every epoch is one DuckLake transaction. It holds the view's new rows, the view's state and the Kafka offsets it
+read, so they are saved together or not at all.
+
+<div class="dw-flow">
+  <div><span>1</span><h3>Read</h3><p>Take the next batch of events from Kafka, or the next changes of a lake table, and decode them.</p></div>
+  <div><span>2</span><h3>Stage</h3><p>Compute only what changed: the view runs as an incremental operator circuit in the DBSP model.</p></div>
+  <div><span>3</span><h3>Commit</h3><p>Write rows, state and offsets in one transaction. After a crash the worker resumes from the last commit.</p></div>
+</div>
+
+A crash never loses or duplicates output. `duckwake_verify(view)` checks a view against the same SQL run as one
+batch query, and every test suite in the repository ends with that check, including the ones that kill workers
+mid-epoch.
+
+## What a view can do
+
+<CardGrid>
+  <Card title="Filter, project, join" icon="database">
+    `WHERE` and `SELECT` over a Kafka source, and lookup joins from the stream to DuckLake tables.
+  </Card>
+  <Card title="Windows" icon="clock">
+    Tumbling and hopping windows with `TUMBLE` and `HOP`, closed by the watermark. Late events go to their own table.
+  </Card>
+  <Card title="Aggregates" icon="analytics">
+    `count`, `sum`, `avg`, `min`, `max`, windowed or as running totals per group, plus `DISTINCT` and `UNION ALL`.
+  </Card>
+  <Card title="Views over views" icon="code-branch">
+    A view can read another view or any lake table through its change feed, starting from the rows it already holds.
+  </Card>
+</CardGrid>
+
+## Built to run unattended
+
+<CardGrid>
+  <Card title="Failover and rebalancing" icon="random">
+    Workers heartbeat into the lake. A dead worker's views move to live ones, and new workers take a share by measured load.
+  </Card>
+  <Card title="Change while running" icon="pencil">
+    Replace a view or add a column to a source while it runs. A plain `dbt run` never recomputes a view by surprise.
+  </Card>
+  <Card title="Limits that fail small" icon="warning">
+    Per-view limits stop one view, not its worker. A worker short of memory shrinks its epochs instead of failing.
+  </Card>
+  <Card title="Observable" icon="setting">
+    Prometheus metrics, alert rules with tests, and a Grafana dashboard, each alert with what to do when it fires.
+  </Card>
+</CardGrid>
+
+Kafka with SASL (PLAIN, SCRAM) and TLS, data files on local disk or S3, and no credential stored in the lake.
+
+## Three ways to run it
+
+<CardGrid>
+  <LinkCard title="duckwaked" description="A server: a worker plus the duckwake_* SQL functions over Quack, with Prometheus metrics. Also a Docker image." href="/docs/reference/server/" />
+  <LinkCard title="LOAD duckwake" description="The extension, in your own DuckDB 2.0: the same functions and a worker in that process." href="/docs/reference/extension/" />
+  <LinkCard title="duckwake" description="A CLI with a command per function, and a playground web UI." href="/docs/reference/cli/" />
+</CardGrid>
+
+## Measured
+
+One worker on a MacBook (Apple Silicon, 10 cores), the playground's mix of views, all four worker flags on.
+[How these were measured](/docs/operations/performance/).
+
+<div class="dw-stats">
+  <div><strong>108k</strong><span>events/s through a backlog, 1 view</span></div>
+  <div><strong>40.5k</strong><span>events/s through a backlog, 16 views</span></div>
+  <div><strong>327 ms</strong><span>median commit per 2 s epoch, 16 views at a steady 20k events/s</span></div>
+</div>
+
+## Where it stands
+
+Version 0.1, on its [roadmap](/docs/project/roadmap/) to production. Every item is built with failure handling,
+operator controls and an integration suite in CI. Next: a long soak and failure drills on a real server, the
+runbook, and replacing a dbt view without downtime. Not yet: `CREATE CONTINUOUS VIEW` DDL, a signed extension
+and stream–stream joins.
+
+<CardGrid>
+  <LinkCard title="Quick start" description="Run the stack and your first view in a few minutes." href="/docs/start/quick-start/" />
+  <LinkCard title="Concepts" description="Sources, views, epochs, watermarks, and how exactly-once works." href="/docs/start/concepts/" />
+</CardGrid>

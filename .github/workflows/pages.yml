@@ -1,30 +1,57 @@
-# Publishes site/ to https://duckwake.github.io on every push to main.
+# Builds the site (Astro + Starlight) and publishes it to https://duckwake.github.io.
+# The reference docs come from duckwake/duckwake's main branch (scripts/sync-docs.mjs), so the site is rebuilt
+# on every push here, once a day, and on demand to pick up docs changed there. Pull requests build only: a
+# broken internal link or a page that fails to render fails the check.
 name: pages
 on:
   push:
     branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/duckwake
+          ref: main
+          path: duckwake
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          DUCKWAKE_REPO: duckwake
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
       - id: deployment
         uses: actions/deploy-pages@v4

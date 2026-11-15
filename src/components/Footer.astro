@@ -1,0 +1,45 @@
+---
+// Starlight's footer (edit link, pagination), then the project's links and the trademark notice every page carries.
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default />
+<div class="dw-footer">
+  <nav aria-label="Project">
+    <a href="https://github.com/duckwake/duckwake">GitHub</a>
+    <a href="/about/">About</a>
+    <a href="https://github.com/duckwake/duckwake/blob/main/LICENSE">MIT License</a>
+    <a href="https://github.com/duckwake/duckwake/blob/main/SECURITY.md">Security</a>
+  </nav>
+  <p>
+    DuckDB and DuckLake are trademarks of the DuckDB Foundation. DuckWake is an independent project, not
+    affiliated with or endorsed by the DuckDB Foundation or DuckDB Labs.
+  </p>
+</div>
+
+<style>
+  .dw-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--sl-color-hairline);
+    font-size: var(--sl-text-xs);
+    color: var(--sl-color-gray-3);
+  }
+  .dw-footer nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .dw-footer a {
+    color: var(--sl-color-gray-2);
+    text-decoration: none;
+  }
+  .dw-footer a:hover {
+    color: var(--sl-color-text-accent);
+  }
+  .dw-footer p {
+    margin: 0;
+    max-width: 60ch;
+  }
+</style>
