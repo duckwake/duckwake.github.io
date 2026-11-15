@@ -1,0 +1,85 @@
+---
+title: Quick start
+description: Run the test stack, create a source and a windowed view, send events and read the view's table.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+This runs everything on one machine: PostgreSQL as the lake's catalog and Redpanda as Kafka in Docker, and one
+DuckWake server. You need Docker, Rust and the [DuckDB 2.0 CLI](https://duckdb.org/docs/installation/).
+
+<Steps>
+
+1. Start the catalog and Kafka, and build DuckWake.
+
+   ```sh
+   git clone https://github.com/duckwake/duckwake.git && cd duckwake
+   docker compose up -d --wait          # PostgreSQL on :55432, Redpanda on :19092
+   cargo build --release                # the first build compiles DuckDB (about 6 minutes)
+   ```
+
+2. Start the server. It runs a worker and serves SQL over Quack on port 9494.
+
+   ```sh
+   target/release/duckwaked --worker w1 --quack-token secret
+   ```
+
+3. In another terminal, open the DuckDB CLI, attach the server and send everything to it.
+
+   ```sql
+   ATTACH 'quack:localhost:9494' AS dw (TOKEN 'secret');
+   CONNECT dw;
+   ```
+
+4. Register the `clicks` topic as a source. `event_time` names the column that carries each event's time.
+
+   ```sql
+   CALL duckwake_create_source('clicks', 'kafka', '{"brokers":"localhost:19092","topic":"clicks",
+     "event_time":"ts","watermark_delay":"5 seconds",
+     "columns":{"ts":"TIMESTAMP","game_id":"VARCHAR","user_id":"VARCHAR","amount":"DECIMAL(18,2)"}}');
+   ```
+
+5. Create a view that counts clicks and revenue per game, per minute, and start it.
+
+   ```sql
+   CALL duckwake_create_view('analytics.clicks_per_min',
+     'SELECT window_start, game_id, count(*) AS n, sum(amount) AS revenue
+      FROM TUMBLE(clicks, ts, INTERVAL 1 MINUTE) GROUP BY ALL',
+     late_data := 'analytics.clicks_late');
+   CALL duckwake_start('clicks_per_min');
+   ```
+
+6. In a third terminal, send test events: 2,000 a second, with a late one now and then.
+
+   ```sh
+   target/release/duckwake produce --rate 2000 --late-every 500
+   ```
+
+7. Watch the view and read its table. Each minute's row appears once the watermark passes the minute's end.
+
+   ```sql
+   FROM duckwake_jobs();                  -- status, epoch, watermark, freshness, lag
+   FROM lake.analytics.clicks_per_min ORDER BY window_start DESC LIMIT 5;
+   FROM lake.analytics.clicks_late LIMIT 5;
+   ```
+
+8. Check it. `duckwake_verify` runs the view's SQL as one batch query over everything the view has read and
+   compares the result with the view's table.
+
+   ```sql
+   FROM duckwake_verify('clicks_per_min');
+   ```
+
+</Steps>
+
+<Aside type="tip">
+`lake.analytics.clicks_per_min` is an ordinary DuckLake table. Any DuckDB that attaches the same lake reads
+it, with nothing from DuckWake installed.
+</Aside>
+
+## Next
+
+- [Concepts](/docs/start/concepts/): what epochs, watermarks and the change feed mean for your views.
+- [dbt-duckwake](/docs/guides/dbt/): the same source and view as dbt models.
+- [SQL functions](/docs/reference/sql/): everything you can call, and the CLI equivalents.
+- [Server](/docs/reference/server/): running `duckwaked` in Docker, with tokens and metrics.

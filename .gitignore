@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+# Written by scripts/sync-docs.mjs from duckwake/duckwake at build time.
+src/content/docs/docs/reference/
+src/content/docs/docs/guides/dbt.md
+src/content/docs/docs/operations/
+src/content/docs/docs/project/
+src/content/docs/docs/design/
+duckwake/
