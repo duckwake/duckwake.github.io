@@ -1,5 +1,6 @@
-/* DuckWake brand on Starlight: colours from brand/GUIDELINES.md (Ink, Paper, Amber, Lake) and the site's Wake
-   teal; Space Grotesk for headings, Inter for text, JetBrains Mono for code. */
+/* DuckWake on Starlight: the brand (brand/GUIDELINES.md: Ink, Paper, Amber, Lake, and the site's Wake teal;
+   Space Grotesk for titles, Inter for text, JetBrains Mono for code) in a light, quiet docs layout: hairlines
+   instead of boxes, small section labels, a soft highlight for the current page, readable line lengths. */
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/500.css';
 @import '@fontsource/inter/600.css';
@@ -16,54 +17,286 @@
   --dw-lake: #1d5a7a;
   --dw-wake: #2fa39a;
   --dw-display: 'Space Grotesk', system-ui, sans-serif;
+  --dw-radius: 0.6rem;
 
   --sl-font: 'Inter', system-ui, -apple-system, sans-serif;
   --sl-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sl-content-width: 48rem;
+  --sl-sidebar-width: 17rem;
+  --sl-text-h1: 2.25rem;
+  --sl-text-h2: 1.5rem;
+  --sl-text-h3: 1.2rem;
+  --sl-text-h4: 1.05rem;
+  --sl-line-height: 1.7;
 }
 
-/* Dark: the lake at night, Ink underneath, Wake teal for links and highlights. */
+/* Dark: Ink underneath, Wake teal for links and the current page. */
 :root {
-  --sl-color-white: #ffffff;
-  --sl-color-gray-1: #eef1ef;
-  --sl-color-gray-2: #c6ced3;
-  --sl-color-gray-3: #8b9aa5;
-  --sl-color-gray-4: #556672;
-  --sl-color-gray-5: #2c3c48;
-  --sl-color-gray-6: #15232e;
-  --sl-color-black: #0e1a24;
-  --sl-color-accent-low: #123c3b;
+  --sl-color-white: #f4f6f5;
+  --sl-color-gray-1: #e3e8e7;
+  --sl-color-gray-2: #b9c3c8;
+  --sl-color-gray-3: #8494a0;
+  --sl-color-gray-4: #4f606c;
+  --sl-color-gray-5: #24333e;
+  --sl-color-gray-6: #121d26;
+  --sl-color-black: #0b151d;
+  --sl-color-accent-low: #10302f;
   --sl-color-accent: #2fa39a;
-  --sl-color-accent-high: #a6e3dc;
-  --sl-color-bg-nav: #0e1a24;
-  --sl-color-bg-sidebar: #0e1a24;
+  --sl-color-accent-high: #8fdcd3;
+  --sl-color-bg-nav: rgb(11 21 29 / 0.82);
+  --sl-color-bg-sidebar: #0b151d;
+  --sl-color-hairline: #18242e;
+  --sl-color-hairline-light: #1f2c37;
+  --sl-color-hairline-shade: #18242e;
+  --sl-color-bg-inline-code: #15222c;
+  --dw-code-border: #22313c;
+  --dw-table-head: #101b24;
 }
 
-/* Light: Paper and white, Lake blue for links. */
+/* Light: white page, Paper for panels, Lake blue for links. */
 :root[data-theme='light'] {
   --sl-color-white: #0e1a24;
   --sl-color-gray-1: #1b2a35;
-  --sl-color-gray-2: #26343f;
-  --sl-color-gray-3: #46555f;
-  --sl-color-gray-4: #7a8892;
-  --sl-color-gray-5: #c3ccd2;
-  --sl-color-gray-6: #e8ecea;
+  --sl-color-gray-2: #34434e;
+  --sl-color-gray-3: #5c6b76;
+  --sl-color-gray-4: #8a979f;
+  --sl-color-gray-5: #d5dcdf;
+  --sl-color-gray-6: #eef1ef;
   --sl-color-gray-7: #f7f8f5;
   --sl-color-black: #ffffff;
-  --sl-color-accent-low: #d5e8f0;
+  --sl-color-accent-low: #e3f0f4;
   --sl-color-accent: #1d5a7a;
-  --sl-color-accent-high: #143f56;
-  --sl-color-bg-nav: #f7f8f5;
+  --sl-color-accent-high: #164861;
+  --sl-color-bg-nav: rgb(255 255 255 / 0.85);
   --sl-color-bg-sidebar: #ffffff;
+  --sl-color-hairline: #e6eaea;
+  --sl-color-hairline-light: #e6eaea;
+  --sl-color-hairline-shade: #e6eaea;
+  --sl-color-bg-inline-code: #f1f4f3;
+  --dw-code-border: #e1e6e6;
+  --dw-table-head: #f7f8f5;
 }
 
-h1, h2, h3, h4,
-.sl-markdown-content :is(h1, h2, h3, h4),
-[data-page-title] {
+body {
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header: translucent over the page, one hairline. */
+.header {
+  backdrop-filter: saturate(160%) blur(10px);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
+  border-bottom: 1px solid var(--sl-color-hairline) !important;
+}
+.site-title img {
+  height: 1.75rem;
+  min-width: 120px; /* the lockup's minimum width, GUIDELINES.md §3 */
+  width: auto;
+}
+site-search button[data-open-modal] {
+  border-radius: 0.5rem;
+  border-color: var(--sl-color-hairline-light);
+  background: var(--sl-color-gray-6);
+}
+
+/* Sidebar: small section labels, plain links, the current page tinted with an accent bar. */
+.sidebar-pane {
+  border-inline-end: 1px solid var(--sl-color-hairline) !important;
+}
+.sidebar-content .top-level > li + li {
+  margin-top: 1.25rem;
+}
+.sidebar-content .large {
+  font-family: var(--sl-font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
+}
+.sidebar-content summary .caret {
+  color: var(--sl-color-gray-4);
+  width: 1rem;
+  height: 1rem;
+}
+.sidebar-content ul ul li {
+  border-inline-start: 0;
+  margin-inline-start: 0;
+  padding-inline-start: 0;
+}
+.sidebar-content a {
+  font-size: 0.875rem;
+  color: var(--sl-color-gray-2);
+  border-radius: 0.4rem;
+  padding: 0.35em 0.6rem;
+  border-inline-start: 2px solid transparent;
+  transition: background-color 0.12s, color 0.12s;
+}
+.sidebar-content a:hover {
+  color: var(--sl-color-white);
+  background: var(--sl-color-gray-6);
+}
+.sidebar-content a[aria-current='page'],
+.sidebar-content a[aria-current='page']:hover,
+.sidebar-content a[aria-current='page']:focus {
+  font-weight: 600;
+  color: var(--sl-color-accent-high);
+  background: var(--sl-color-accent-low);
+  border-inline-start-color: var(--sl-color-accent);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+/* The title area and the content are one surface. */
+.content-panel {
+  border-top: 0 !important;
+}
+.content-panel + .content-panel {
+  padding-top: 0.5rem;
+}
+
+/* Page title: a section label above, the page's description below (src/components/PageTitle.astro). */
+.dw-section {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--sl-color-text-accent);
+}
+h1#_top {
+  margin-top: 0.25rem;
   font-family: var(--dw-display);
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.dw-lead {
+  margin-top: 0.75rem;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--sl-color-gray-3);
+  max-width: 42rem;
 }
 
-/* The main call to action is Amber with Ink text, as on the brand presentation. */
+/* Text */
+.sl-markdown-content {
+  color: var(--sl-color-gray-2);
+}
+.sl-markdown-content :is(h2, h3, h4) {
+  color: var(--sl-color-white);
+  letter-spacing: -0.015em;
+}
+.sl-markdown-content h2 {
+  font-family: var(--dw-display);
+  font-weight: 700;
+}
+/* A section starts with a hairline across the column (on the heading's wrapper, which spans it). */
+.sl-markdown-content .sl-heading-wrapper.level-h2 {
+  margin-top: 2.75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--sl-color-hairline);
+}
+.sl-markdown-content > .sl-heading-wrapper.level-h2:first-child {
+  margin-top: 0.5rem;
+  padding-top: 0;
+  border-top: 0;
+}
+.sl-markdown-content h3 {
+  font-family: var(--sl-font);
+  font-weight: 600;
+  margin-top: 2rem;
+}
+.sl-markdown-content h4 {
+  font-family: var(--sl-font);
+  font-weight: 600;
+}
+.sl-markdown-content strong {
+  color: var(--sl-color-white);
+  font-weight: 600;
+}
+.sl-markdown-content a:not(.sl-link-button, .sl-link-card, .card a, [role='tab']) {
+  color: var(--sl-color-text-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 0.2em;
+}
+.sl-markdown-content a:not(.sl-link-button, .sl-link-card, [role='tab']):hover {
+  text-decoration-color: currentColor;
+}
+.sl-markdown-content :not(pre) > code {
+  font-size: 0.85em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.35rem;
+  border: 1px solid var(--dw-code-border);
+  background: var(--sl-color-bg-inline-code);
+  color: var(--sl-color-gray-1);
+  overflow-wrap: anywhere;
+}
+.sl-markdown-content :is(ul, ol) li + li {
+  margin-top: 0.35rem;
+}
+.sl-markdown-content hr {
+  border-color: var(--sl-color-hairline);
+}
+
+/* Tables: rounded, a light header row, hairlines between rows only. */
+.sl-markdown-content table {
+  display: block;
+  overflow-x: auto;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: var(--dw-radius);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+}
+.sl-markdown-content :is(th, td) {
+  border: 0;
+  border-bottom: 1px solid var(--sl-color-hairline);
+  padding: 0.6rem 0.9rem;
+  vertical-align: top;
+}
+.sl-markdown-content tr:last-child td {
+  border-bottom: 0;
+}
+.sl-markdown-content th {
+  background: var(--dw-table-head);
+  color: var(--sl-color-white);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-align: start;
+}
+
+/* Asides and images */
+.starlight-aside {
+  border-radius: var(--dw-radius);
+  border-inline-start-width: 3px;
+}
+.sl-markdown-content img {
+  border-radius: var(--dw-radius);
+  border: 1px solid var(--sl-color-hairline-light);
+}
+
+/* On this page */
+starlight-toc h2,
+mobile-starlight-toc h2 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
+}
+starlight-toc a {
+  font-size: 0.85rem;
+  color: var(--sl-color-gray-3);
+}
+starlight-toc a[aria-current='true'] {
+  color: var(--sl-color-text-accent);
+  font-weight: 600;
+}
+
+/* Buttons: Amber with Ink text for the main action, as on the brand presentation. */
+.sl-link-button {
+  border-radius: 0.55rem;
+}
 .sl-link-button.primary {
   background: var(--dw-amber);
   border-color: var(--dw-amber);
@@ -75,11 +308,41 @@ h1, h2, h3, h4,
   color: var(--dw-ink);
 }
 
-/* The logo needs its clear space and a minimum width of 120 px (GUIDELINES.md §2-3). */
-.site-title img {
-  height: 2rem;
-  min-width: 120px;
-  width: auto;
+/* Cards and link cards: one brand colour, a hairline, a slight lift on hover. */
+.card.card {
+  --sl-card-border: var(--sl-color-hairline-light);
+  --sl-card-bg: var(--sl-color-gray-6);
+  border-radius: var(--dw-radius);
+}
+:root[data-theme='light'] .card.card {
+  --sl-card-bg: var(--sl-color-gray-7);
+}
+.card .icon {
+  color: var(--sl-color-text-accent);
+  background: var(--sl-color-accent-low);
+  border: 0;
+  border-radius: 0.45rem;
+  padding: 0.25rem;
+}
+.sl-link-card {
+  border-radius: var(--dw-radius) !important;
+  border-color: var(--sl-color-hairline-light) !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.sl-link-card:hover {
+  border-color: var(--sl-color-accent) !important;
+  transform: translateY(-1px);
+}
+
+/* Previous and next */
+.pagination-links a {
+  border-radius: var(--dw-radius);
+  border-color: var(--sl-color-hairline-light);
+  box-shadow: none;
+}
+.pagination-links a:hover {
+  border-color: var(--sl-color-accent);
 }
 
 /* Home page */
@@ -163,17 +426,7 @@ h1, h2, h3, h4,
   margin-top: 0;
 }
 
-/* Cards: one brand colour instead of Starlight's rotating orange, purple, green and red. */
-.card.card {
-  --sl-card-border: var(--dw-wake);
-  --sl-card-bg: var(--sl-color-accent-low);
-}
-:root[data-theme='light'] .card.card {
-  --sl-card-border: var(--dw-lake);
-}
-.card .icon {
-  color: var(--sl-color-accent-high);
-}
-:root[data-theme='light'] .card .icon {
-  color: var(--dw-lake);
+/* A table's first column names the row: keep short names on one line. */
+.sl-markdown-content :is(th, td):first-child {
+  min-width: 9rem;
 }

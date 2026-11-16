@@ -7,7 +7,7 @@
 // repository, and relative links are rewritten. A link to another synced file becomes its page on the site;
 // a link to anything else in the repository (a script, the dbt example) becomes its GitHub URL. Links inside
 // code blocks are left alone. The build's link validator then fails on any link that leads nowhere.
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -32,17 +32,27 @@ const pages = {
   'docs/performance.md': 'docs/operations/performance',
   'docs/roadmap.md': 'docs/project/roadmap',
   'docs/releasing.md': 'docs/project/releasing',
-  'docs/testing.md': 'docs/project/testing',
-  'docs/internals.md': 'docs/project/internals',
   'CHANGELOG.md': 'docs/project/changelog',
   'dbt/README.md': 'docs/guides/dbt',
-  'docs/design/README.md': 'docs/design',
 };
-for (const f of readdirSync(path.join(repo, 'docs/design'))) {
-  if (f.endsWith('.md') && f !== 'README.md') pages[`docs/design/${f}`] = `docs/design/${f.slice(0, -3)}`;
-}
+// Not on the site: the design documents, docs/internals.md and docs/testing.md, which are for people working on
+// DuckWake itself. Links to them point at the files on GitHub (`rewrite` below).
+// The one line under each page's title (src/components/PageTitle.astro), and the page's search summary.
+const descriptions = {
+  'docs/sql.md': 'Every duckwake_* function: sources, views, their lifecycle, inspection, and the aggregates a view can use.',
+  'docs/cli.md': 'The duckwake command line: a command per SQL function, the worker, a test producer and the playground.',
+  'docs/server.md': 'Run duckwaked: a worker plus the SQL functions over Quack, with tokens, metrics and supervision.',
+  'docs/extension.md': 'LOAD duckwake in your own DuckDB 2.0: the same functions and a worker in that process.',
+  'docs/alerts.md': 'The metrics a worker exports, the Prometheus alerts and Grafana dashboard, and what to do when each fires.',
+  'docs/performance.md': 'The four worker flags for parallel and pipelined epochs, and what they measured.',
+  'docs/roadmap.md': 'What is built, and what stands between DuckWake and production.',
+  'docs/releasing.md': 'Versions, what a release publishes, and how to make one.',
+  'CHANGELOG.md': 'Every notable change, release by release.',
+  'dbt/README.md': 'Kafka sources and streaming views as dbt models, with dbt-duckdb.',
+};
+
 // Folders copied next to the pages that use them (their images keep their relative paths).
-const assets = { 'docs/design/images': 'docs/design/images' };
+const assets = {};
 
 // The generated tree is rebuilt from scratch, so a page removed upstream disappears here too.
 for (const dir of ['docs/reference', 'docs/operations', 'docs/project', 'docs/design']) {
@@ -89,12 +99,14 @@ function convert(text, from) {
     if (fence) return line;
     return line.replace(/(!?\[[^\]]*\]\()([^)\s]+)(\))/g, (_, open, target, close) => open + rewrite(target, from) + close);
   });
-  const front = ['---', `title: ${JSON.stringify(title)}`, `editUrl: ${JSON.stringify(`${GITHUB}/edit/main/${from}`)}`, '---', ''];
+  const front = ['---', `title: ${JSON.stringify(title)}`];
+  if (descriptions[from]) front.push(`description: ${JSON.stringify(descriptions[from])}`);
+  front.push(`editUrl: ${JSON.stringify(`${GITHUB}/edit/main/${from}`)}`, '---', '');
   return front.concat(body).join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
 for (const [from, to] of Object.entries(pages)) {
-  const out = path.join(CONTENT, from === 'docs/design/README.md' ? `${to}/index.md` : `${to}.md`);
+  const out = path.join(CONTENT, `${to}.md`);
   mkdirSync(path.dirname(out), { recursive: true });
   writeFileSync(out, convert(readFileSync(path.join(repo, from), 'utf8'), from));
 }

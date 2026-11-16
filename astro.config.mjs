@@ -28,6 +28,25 @@ export default defineConfig({
       customCss: ['./src/styles/brand.css'],
       components: {
         Footer: './src/components/Footer.astro',
+        PageTitle: './src/components/PageTitle.astro',
+      },
+      // Code blocks: rounded and flat, no shadow, and no window dots on shell blocks.
+      expressiveCode: {
+        // Shell blocks get a plain code frame too, not a terminal window; a block with a title keeps its tab.
+        defaultProps: { frame: 'code' },
+        styleOverrides: {
+          borderRadius: '0.6rem',
+          borderColor: 'var(--dw-code-border)',
+          codeFontSize: '0.85rem',
+          codeLineHeight: '1.65',
+          codePaddingBlock: '0.9rem',
+          codePaddingInline: '1.1rem',
+          frames: {
+            frameBoxShadowCssValue: 'none',
+            editorActiveTabIndicatorTopColor: 'var(--sl-color-accent)',
+            editorActiveTabIndicatorBottomColor: 'transparent',
+          },
+        },
       },
       lastUpdated: false,
       plugins: [starlightLinksValidator({ errorOnLocalLinks: true })],
@@ -66,14 +85,7 @@ export default defineConfig({
             { label: 'Roadmap', slug: 'docs/project/roadmap' },
             { label: 'Changelog', slug: 'docs/project/changelog' },
             { label: 'Releases', slug: 'docs/project/releasing' },
-            { label: 'Testing', slug: 'docs/project/testing' },
-            { label: 'Internals', slug: 'docs/project/internals' },
           ],
-        },
-        {
-          label: 'Design documents',
-          collapsed: true,
-          items: [{ autogenerate: { directory: 'docs/design' } }],
         },
       ],
     }),

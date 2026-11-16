@@ -1,0 +1,20 @@
+---
+// The page title with the docs section it belongs to above it and the page's description below it, so each
+// page says in one line what it is for. The home page (splash) keeps Starlight's hero instead.
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+
+const { entry, id } = Astro.locals.starlightRoute;
+const sections: Record<string, string> = {
+  start: 'Start here',
+  guides: 'Guides',
+  reference: 'Reference',
+  operations: 'Operations',
+  project: 'Project',
+};
+const section = id.startsWith('docs/') ? sections[id.split('/')[1]] : undefined;
+const description = entry.data.description;
+---
+
+{section && <p class="dw-section">{section}</p>}
+<Default />
+{description && <p class="dw-lead">{description}</p>}

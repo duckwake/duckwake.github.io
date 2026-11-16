@@ -7,7 +7,7 @@ The website of DuckWake, https://duckwake.github.io: the home page, About and th
 | --- | --- |
 | `src/content/docs/index.mdx`, `about.md` | The home page and About |
 | `src/content/docs/docs/start/` | Install, Quick start, Concepts: written here |
-| `scripts/sync-docs.mjs` | Copies the reference docs (`docs/*.md`, `dbt/README.md`, `CHANGELOG.md`, `docs/design/`) from duckwake/duckwake at build time; they are written and reviewed there, next to the code |
+| `scripts/sync-docs.mjs` | Copies the user docs (`docs/*.md` but `internals.md` and `testing.md`, `dbt/README.md`, `CHANGELOG.md`) from duckwake/duckwake at build time; they are written and reviewed there, next to the code. The design documents, internals and testing notes stay on GitHub, for people working on DuckWake itself |
 | `src/styles/brand.css`, `src/assets/`, `public/` | The brand on the site: colours, fonts, logos, icons |
 | `public/extensions/` | The DuckDB extension repository, filled by duckwake/duckwake's release workflow |
 | `brand/` | The brand kit and its guidelines (`brand/GUIDELINES.md`); not published |
