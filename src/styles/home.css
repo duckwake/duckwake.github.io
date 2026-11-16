@@ -32,6 +32,7 @@
   color: var(--sl-color-white);
 }
 .dw-pill-tag {
+  white-space: nowrap;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
   background: var(--dw-amber);
@@ -469,4 +470,57 @@
   .dw-section-block table {
     display: block;
   }
+}
+
+/* The duck behind the hero: the one-colour symbol (white on Ink, Lake on white, GUIDELINES.md §4), large and
+   faint, behind the product: its head and bill clear of the windows at the right, its body through them, its
+   wake running back towards the headline. No glow or shadow (§6). */
+.dw-hero {
+  position: relative;
+  isolation: isolate;
+}
+.dw-hero::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: var(--dw-duck-top, -3.5rem);
+  /* Past the column, but the bill stays inside the window at any width. */
+  right: max(var(--dw-duck-right, -11rem), calc((100% - 100vw) / 2 + 1rem));
+  width: var(--dw-duck-size, 46rem);
+  aspect-ratio: 1;
+  background: url('/brand/duck-white.svg') center / contain no-repeat;
+  opacity: 0.075;
+  pointer-events: none;
+}
+:root[data-theme='light'] .dw-hero::before {
+  background-image: url('/brand/duck-lake.svg');
+  opacity: 0.09;
+}
+/* On narrow screens the duck sits behind the headline instead, smaller. */
+@media (max-width: 64rem) {
+  .dw-hero {
+    --dw-duck-top: 0rem;
+    --dw-duck-right: -3rem;
+    --dw-duck-size: 24rem;
+  }
+}
+@media (max-width: 40rem) {
+  .dw-hero {
+    --dw-duck-top: 12.5rem;
+    --dw-duck-right: 0rem;
+    --dw-duck-size: 17rem;
+  }
+}
+/* The product windows are frosted glass over the duck, so its body shows softly through them. */
+.dw-hero .dw-window {
+  background: color-mix(in srgb, var(--sl-color-gray-6) 78%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+:root[data-theme='light'] .dw-hero .dw-window {
+  background: rgb(255 255 255 / 0.8);
+}
+/* The page keeps its width: the duck may reach past the column but never past the window. */
+.main-frame {
+  overflow-x: clip;
 }
