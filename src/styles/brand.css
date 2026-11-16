@@ -82,8 +82,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Header: translucent over the page, one hairline. */
-.header {
+/* Header: translucent over the page, one hairline. Only the page header: Starlight's inner row and Expressive
+   Code's frame titles are also `.header`, and a line on the inner row drew a second one under the header. */
+header.header {
   backdrop-filter: saturate(160%) blur(10px);
   -webkit-backdrop-filter: saturate(160%) blur(10px);
   border-bottom: 1px solid var(--sl-color-hairline) !important;
