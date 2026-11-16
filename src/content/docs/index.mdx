@@ -3,49 +3,73 @@ title: DuckWake
 description: Write a view in SQL; DuckWake keeps a DuckLake table up to date with it as events arrive from Kafka, exactly once.
 template: splash
 hero:
-  title: Continuous SQL over Kafka into DuckLake, <span class="dw-accent">exactly once.</span>
-  tagline: You write a view in SQL; DuckWake keeps a DuckLake table up to date with it as events arrive. No streaming cluster to run, and the result is an ordinary lake table that any DuckDB client reads.
-  image:
-    light: ../../assets/duckwake-symbol.svg
-    dark: ../../assets/duckwake-symbol-reversed.svg
-    alt: The DuckWake duck, with its wake carved through it
+  title: Streaming SQL for DuckDB, <span class="dw-accent">exactly once.</span>
+  tagline: Write a view in SQL. DuckWake keeps a DuckLake table equal to it as events arrive from Kafka, with no streaming cluster to run. Any DuckDB client reads the result.
   actions:
     - text: Quick start
       link: /docs/start/quick-start/
       icon: right-arrow
       variant: primary
-    - text: How it works
-      link: /docs/start/concepts/
-      variant: secondary
-    - text: GitHub
+    - text: Star on GitHub
       link: https://github.com/duckwake/duckwake
       icon: github
-      variant: minimal
+      variant: secondary
 ---
 
-import { Card, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+import { LinkButton, Tabs, TabItem } from '@astrojs/starlight/components';
 
-<p class="dw-eyebrow">Open source (MIT) · built on DuckDB 2.0 and DuckLake 1.1</p>
+<div class="dw-works">
+  <span class="dw-works-label">Works with</span>
+  <span>Apache Kafka</span><span>Redpanda</span><span>DuckDB 2.0</span><span>DuckLake</span><span>PostgreSQL</span><span>Amazon S3</span><span>dbt</span><span>Prometheus</span><span>Grafana</span>
+</div>
 
-## A view in, a fresh table out
+<section class="dw-section-block">
+<p class="dw-kicker">How it works</p>
+<h2 class="dw-h2">From topic to table in one transaction</h2>
+<p class="dw-sub">A worker reads new events, computes only what changed, and commits the view's rows, its state and the offsets it read together. Nothing in between can lose or repeat a row.</p>
 
-Register a Kafka topic as a source and create a view over it. DuckWake runs the view in small batches, called
-epochs, and commits each one to the DuckLake table named after the view. Write it as SQL calls, or as a dbt
-model next to the rest of your project.
+<div class="dw-arch">
+  <div class="dw-arch-col">
+    <p class="dw-arch-title">In</p>
+    <div class="dw-arch-box"><strong>Kafka topics</strong><span>JSON events, with SASL and TLS</span></div>
+    <div class="dw-arch-box"><strong>Lake tables and views</strong><span>read through their change feed</span></div>
+  </div>
+  <div class="dw-arch-arrow" aria-hidden="true"></div>
+  <div class="dw-arch-col dw-arch-core">
+    <p class="dw-arch-title">DuckWake worker</p>
+    <div class="dw-arch-steps">
+      <div><b>1</b>Read<span>the next batch of events</span></div>
+      <div><b>2</b>Stage<span>only what changed, as an incremental circuit</span></div>
+      <div><b>3</b>Commit<span>rows, state and offsets in one DuckLake transaction</span></div>
+    </div>
+  </div>
+  <div class="dw-arch-arrow" aria-hidden="true"></div>
+  <div class="dw-arch-col">
+    <p class="dw-arch-title">Out</p>
+    <div class="dw-arch-box"><strong>DuckLake tables</strong><span>on local disk or S3</span></div>
+    <div class="dw-arch-box"><strong>Any DuckDB client</strong><span>dashboards, notebooks, dbt, other views</span></div>
+  </div>
+</div>
+</section>
 
+<section class="dw-feature">
+<div class="dw-feature-text">
+<p class="dw-kicker">Author</p>
+<h2 class="dw-h2">SQL you already know, or a dbt model</h2>
+<p>A view is a <code>SELECT</code> with windows, joins to lake tables and aggregates. Create it with one call, or keep it as a dbt model next to the rest of your project: <code>dbt run</code> creates and starts it, and leaves it alone until its settings or query change.</p>
+<p><a href="/docs/reference/sql/">SQL functions</a> · <a href="/docs/guides/dbt/">dbt-duckwake</a></p>
+</div>
+<div class="dw-feature-visual">
 <Tabs syncKey="authoring">
 <TabItem label="SQL">
 
 ```sql
--- Clicks per game, per minute, kept fresh from Kafka
 CALL duckwake_create_view('analytics.clicks_per_min',
-  'SELECT window_start, game_id, count(*) AS n, sum(amount) AS revenue
+  'SELECT window_start, game_id, count(*) AS n,
+          sum(amount) AS revenue
    FROM TUMBLE(clicks, ts, INTERVAL 1 MINUTE)
    GROUP BY ALL');
 CALL duckwake_start('clicks_per_min');
-
--- An ordinary DuckLake table
-FROM lake.analytics.clicks_per_min;
 ```
 
 </TabItem>
@@ -58,90 +82,105 @@ FROM TUMBLE({{ ref('clicks') }}, ts, INTERVAL 1 MINUTE)
 GROUP BY ALL
 ```
 
-`dbt run` creates and starts the view; a later run leaves it alone unless its settings or query changed.
-See [dbt-duckwake](/docs/guides/dbt/).
-
 </TabItem>
 </Tabs>
-
-## Exactly once, by construction
-
-Every epoch is one DuckLake transaction. It holds the view's new rows, the view's state and the Kafka offsets it
-read, so they are saved together or not at all.
-
-<div class="dw-flow">
-  <div><span>1</span><h3>Read</h3><p>Take the next batch of events from Kafka, or the next changes of a lake table, and decode them.</p></div>
-  <div><span>2</span><h3>Stage</h3><p>Compute only what changed: the view runs as an incremental operator circuit in the DBSP model.</p></div>
-  <div><span>3</span><h3>Commit</h3><p>Write rows, state and offsets in one transaction. After a crash the worker resumes from the last commit.</p></div>
 </div>
+</section>
 
-A crash never loses or duplicates output. `duckwake_verify(view)` checks a view against the same SQL run as one
-batch query, and every test suite in the repository ends with that check, including the ones that kill workers
-mid-epoch.
+<section class="dw-feature dw-feature-flip">
+<div class="dw-feature-text">
+<p class="dw-kicker">Trust</p>
+<h2 class="dw-h2">Exactly once, and you can check it</h2>
+<p>Every epoch is one DuckLake transaction, so after a crash the worker resumes from the last commit and computes the same epoch again. <code>duckwake_verify</code> runs the view's SQL as one batch query over everything it has read and compares it with the view's table.</p>
+<p>Every test suite ends with that check, including the ones that kill workers in the middle of a commit.</p>
+</div>
+<div class="dw-feature-visual">
 
-## What a view can do
+```sql
+FROM duckwake_verify('clicks_per_min');
+-- VERIFY OK: clicks_per_min output matches batch recomputation
+--            over all 90003 events (epoch 43)
+```
 
-<CardGrid>
-  <Card title="Filter, project, join" icon="database">
-    `WHERE` and `SELECT` over a Kafka source, and lookup joins from the stream to DuckLake tables.
-  </Card>
-  <Card title="Windows" icon="clock">
-    Tumbling and hopping windows with `TUMBLE` and `HOP`, closed by the watermark. Late events go to their own table.
-  </Card>
-  <Card title="Aggregates" icon="analytics">
-    `count`, `sum`, `avg`, `min`, `max`, windowed or as running totals per group, plus `DISTINCT` and `UNION ALL`.
-  </Card>
-  <Card title="Views over views" icon="code-branch">
-    A view can read another view or any lake table through its change feed, starting from the rows it already holds.
-  </Card>
-</CardGrid>
+</div>
+</section>
 
-## Built to run unattended
+<section class="dw-feature">
+<div class="dw-feature-text">
+<p class="dw-kicker">Compose</p>
+<h2 class="dw-h2">Views over views, and over your lake</h2>
+<p>A view can read another view's table, or any DuckLake table, through its change feed. It starts from the rows already there, then follows inserts, updates and deletes, so filters, <code>DISTINCT</code> and <code>GROUP BY</code> stay correct as the data changes.</p>
+<p><a href="/docs/start/concepts/">Concepts</a></p>
+</div>
+<div class="dw-feature-visual">
 
-<CardGrid>
-  <Card title="Failover and rebalancing" icon="random">
-    Workers heartbeat into the lake. A dead worker's views move to live ones, and new workers take a share by measured load.
-  </Card>
-  <Card title="Change while running" icon="pencil">
-    Replace a view or add a column to a source while it runs. A plain `dbt run` never recomputes a view by surprise.
-  </Card>
-  <Card title="Limits that fail small" icon="warning">
-    Per-view limits stop one view, not its worker. A worker short of memory shrinks its epochs instead of failing.
-  </Card>
-  <Card title="Observable" icon="setting">
-    Prometheus metrics, alert rules with tests, and a Grafana dashboard, each alert with what to do when it fires.
-  </Card>
-</CardGrid>
+```sql
+-- Hourly totals from the per-minute view, kept up to date
+SELECT game_id, time_bucket(INTERVAL 1 HOUR, window_start) AS hour,
+       sum(revenue) AS revenue
+FROM analytics.clicks_per_min
+GROUP BY ALL
+```
 
-Kafka with SASL (PLAIN, SCRAM) and TLS, data files on local disk or S3, and no credential stored in the lake.
+</div>
+</section>
 
-## Three ways to run it
+<section class="dw-section-block">
+<p class="dw-kicker">Operate</p>
+<h2 class="dw-h2">Built to run unattended</h2>
+<div class="dw-grid">
+  <div class="dw-tile"><h3>Failover and rebalancing</h3><p>Workers heartbeat into the lake. A dead worker's views move to live ones; a new worker takes a share by measured load.</p></div>
+  <div class="dw-tile"><h3>Change while running</h3><p>Alter a view's settings in place, replace its query, or add a column to a source, without stopping the rest.</p></div>
+  <div class="dw-tile"><h3>Limits that fail small</h3><p>Per-view limits stop one view, not its worker. A worker short of memory shrinks its epochs instead of failing.</p></div>
+  <div class="dw-tile"><h3>Metrics and alerts</h3><p>Prometheus metrics, tested alert rules and a Grafana dashboard, each alert with what to do when it fires.</p></div>
+  <div class="dw-tile"><h3>Late and bad events kept</h3><p>Events for closed windows go to a late-data table, messages that do not decode to a dead-letter table.</p></div>
+  <div class="dw-tile"><h3>Credentials stay out</h3><p>Kafka passwords come from the environment or a file on each worker; nothing secret is stored in the lake.</p></div>
+</div>
+</section>
 
-<CardGrid>
-  <LinkCard title="duckwaked" description="A server: a worker plus the duckwake_* SQL functions over Quack, with Prometheus metrics. Also a Docker image." href="/docs/reference/server/" />
-  <LinkCard title="LOAD duckwake" description="The extension, in your own DuckDB 2.0: the same functions and a worker in that process." href="/docs/reference/extension/" />
-  <LinkCard title="duckwake" description="A CLI with a command per function, and a playground web UI." href="/docs/reference/cli/" />
-</CardGrid>
+<section class="dw-section-block">
+<p class="dw-kicker">Use cases</p>
+<h2 class="dw-h2">What teams build with it</h2>
+<div class="dw-grid dw-grid-4">
+  <div class="dw-usecase"><h3>Live dashboards</h3><p>Revenue, signups or errors per minute, seconds behind the events instead of a night.</p></div>
+  <div class="dw-usecase"><h3>Operational counters</h3><p>Active users, distinct devices and running totals per customer, read straight from DuckDB.</p></div>
+  <div class="dw-usecase"><h3>Incremental marts</h3><p>dbt models over lake tables that update as rows change, without full refreshes on a schedule.</p></div>
+  <div class="dw-usecase"><h3>Data quality</h3><p>Late and malformed events captured in their own tables, with metrics and alerts on them.</p></div>
+</div>
+</section>
 
-## Measured
+<section class="dw-section-block">
+<p class="dw-kicker">Compared</p>
+<h2 class="dw-h2">Between a cron job and a streaming cluster</h2>
 
-One worker on a MacBook (Apple Silicon, 10 cores), the playground's mix of views, all four worker flags on.
-[How these were measured](/docs/operations/performance/).
+| | A batch job on a schedule | A streaming cluster | DuckWake |
+| --- | --- | --- | --- |
+| **Freshness** | the schedule: minutes to hours | seconds | seconds: an epoch every few seconds |
+| **After a failure** | a half-done run can drop or repeat rows unless the job is idempotent | exactly once, with coordinated checkpoints | exactly once: one DuckLake transaction per epoch |
+| **What you run** | a scheduler and a warehouse | a cluster, a state backend, checkpoint storage | workers next to DuckDB, with a PostgreSQL catalog |
+| **How you write it** | SQL | SQL or a Java or Python API | SQL, or dbt models |
+| **Where results go** | warehouse tables | sinks into other systems | DuckLake tables any DuckDB client reads |
+| **Scale** | the warehouse's | many nodes, very high throughput | one machine per worker, views spread across workers |
 
+</section>
+
+<section class="dw-section-block">
+<p class="dw-kicker">Measured</p>
+<h2 class="dw-h2">Numbers, with the machine they came from</h2>
+<p class="dw-sub">One worker on a MacBook (Apple Silicon, 10 cores), the playground's mix of views, all four worker flags on. <a href="/docs/operations/performance/">How these were measured</a>.</p>
 <div class="dw-stats">
   <div><strong>108k</strong><span>events/s through a backlog, 1 view</span></div>
   <div><strong>40.5k</strong><span>events/s through a backlog, 16 views</span></div>
   <div><strong>327 ms</strong><span>median commit per 2 s epoch, 16 views at a steady 20k events/s</span></div>
 </div>
+</section>
 
-## Where it stands
-
-Version 0.1, on its [roadmap](/docs/project/roadmap/) to production. Every item is built with failure handling,
-operator controls and an integration suite in CI. Next: a long soak and failure drills on a real server, the
-runbook, and replacing a dbt view without downtime. Not yet: `CREATE CONTINUOUS VIEW` DDL, a signed extension
-and stream–stream joins.
-
-<CardGrid>
-  <LinkCard title="Quick start" description="Run the stack and your first view in a few minutes." href="/docs/start/quick-start/" />
-  <LinkCard title="Concepts" description="Sources, views, epochs, watermarks, and how exactly-once works." href="/docs/start/concepts/" />
-</CardGrid>
+<section class="dw-cta">
+<h2 class="dw-h2">Run your first view in a few minutes</h2>
+<p>Docker for PostgreSQL and Redpanda, one build, one server, and a view over a test topic.</p>
+<div class="dw-cta-actions">
+  <LinkButton href="/docs/start/quick-start/" icon="right-arrow">Quick start</LinkButton>
+  <LinkButton href="/docs/start/concepts/" variant="secondary">Read the concepts</LinkButton>
+</div>
+<p class="dw-cta-note">Version 0.1, on its <a href="/docs/project/roadmap/">roadmap</a> to production. Not yet: stream–stream joins, <code>CREATE CONTINUOUS VIEW</code> DDL and a signed extension.</p>
+</section>

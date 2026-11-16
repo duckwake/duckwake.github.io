@@ -1,0 +1,472 @@
+/* The home page (src/content/docs/index.mdx, src/components/Hero.astro): a hero with the product beside it, a
+   works-with strip, the architecture, alternating feature sections, tiles, a comparison, numbers and a closing
+   call to action. Colours come from brand.css. */
+
+/* Hero */
+.dw-hero {
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+  padding-block: 3rem 2.5rem;
+}
+@media (min-width: 64rem) {
+  .dw-hero {
+    grid-template-columns: 1.05fr 1fr;
+    padding-block: 5rem 4rem;
+  }
+}
+.dw-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.3rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--sl-color-gray-2);
+  text-decoration: none;
+  background: var(--sl-color-gray-6);
+}
+.dw-pill:hover {
+  border-color: var(--sl-color-accent);
+  color: var(--sl-color-white);
+}
+.dw-pill-tag {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--dw-amber);
+  color: var(--dw-ink);
+  font-weight: 600;
+}
+.dw-hero h1 {
+  margin: 1.25rem 0 0;
+  font-family: var(--dw-display);
+  font-weight: 700;
+  font-size: clamp(2.4rem, 1.2rem + 4vw, 4.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  color: var(--sl-color-white);
+}
+.dw-hero-tagline {
+  margin-top: 1.25rem;
+  max-width: 34rem;
+  font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.25rem);
+  line-height: 1.6;
+  color: var(--sl-color-gray-2);
+}
+.dw-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+/* The product visual: the view's SQL, then its table. */
+.dw-hero-visual {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.dw-window {
+  border: 1px solid var(--dw-code-border);
+  border-radius: 0.75rem;
+  background: var(--sl-color-gray-6);
+  overflow: hidden;
+  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.45);
+}
+:root[data-theme='light'] .dw-window {
+  background: #fff;
+  box-shadow: 0 24px 48px -28px rgb(14 26 36 / 0.25);
+}
+.dw-window-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid var(--dw-code-border);
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  color: var(--sl-color-gray-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.dw-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--sl-color-text-accent);
+}
+.dw-live i {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--dw-wake);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dw-wake) 25%, transparent);
+}
+.dw-window-code {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  font-family: var(--sl-font-mono);
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: var(--sl-color-gray-1);
+  overflow-x: auto;
+}
+.dw-window-code .k { color: #c792ea; }
+.dw-window-code .f { color: #82aaff; }
+.dw-window-code .n { color: #f78c6c; }
+:root[data-theme='light'] .dw-window-code .k { color: #8f3fb0; }
+:root[data-theme='light'] .dw-window-code .f { color: #1d5a7a; }
+:root[data-theme='light'] .dw-window-code .n { color: #b5532b; }
+.dw-window-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--sl-font-mono);
+  font-size: 0.76rem;
+}
+.dw-window-table :is(th, td) {
+  padding: 0.45rem 0.9rem;
+  text-align: start;
+  border-bottom: 1px solid var(--sl-color-hairline);
+}
+.dw-window-table th {
+  color: var(--sl-color-gray-3);
+  font-weight: 500;
+}
+.dw-window-table td {
+  color: var(--sl-color-gray-1);
+}
+.dw-window-table tr:last-child td {
+  border-bottom: 0;
+}
+.dw-window-table td:nth-child(n + 3),
+.dw-window-table th:nth-child(n + 3) {
+  text-align: end;
+}
+.dw-new td {
+  background: color-mix(in srgb, var(--dw-wake) 12%, transparent);
+}
+.dw-flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-flow-arrow svg {
+  color: var(--dw-amber);
+}
+
+/* Works with */
+.dw-works {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1.6rem;
+  padding: 1.5rem 0;
+  border-block: 1px solid var(--sl-color-hairline);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-works-label {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-4);
+}
+
+/* Sections */
+.sl-markdown-content :is(.dw-section-block, .dw-feature, .dw-cta) {
+  margin-top: 6rem;
+}
+.dw-kicker {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-color-text-accent);
+}
+.sl-markdown-content .dw-h2 {
+  margin-top: 0.5rem;
+  font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  max-width: 40rem;
+}
+.dw-sub {
+  max-width: 42rem;
+  font-size: 1.075rem;
+  color: var(--sl-color-gray-2);
+}
+.dw-section-block > .dw-h2 + .dw-sub {
+  margin-top: 0.9rem;
+}
+
+/* Architecture */
+.dw-arch {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+@media (min-width: 56rem) {
+  .dw-arch {
+    grid-template-columns: 1fr 2.5rem 1.35fr 2.5rem 1fr;
+    align-items: center;
+  }
+}
+.sl-markdown-content .dw-arch > * {
+  margin-top: 0;
+}
+.dw-arch-col {
+  display: grid;
+  gap: 0.75rem;
+}
+.dw-arch-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
+}
+.sl-markdown-content .dw-arch-col > * {
+  margin-top: 0;
+}
+.dw-arch-box {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.65rem;
+  background: var(--sl-color-gray-6);
+}
+.dw-arch-box strong {
+  color: var(--sl-color-white);
+}
+.dw-arch-box span {
+  font-size: 0.85rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-arch-core {
+  padding: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--dw-wake) 55%, transparent);
+  border-radius: 0.9rem;
+  background: var(--sl-color-accent-low);
+}
+.dw-arch-steps {
+  display: grid;
+  gap: 0.6rem;
+}
+.sl-markdown-content .dw-arch-steps > div {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr;
+  column-gap: 0.75rem;
+  margin: 0;
+  color: var(--sl-color-white);
+  font-weight: 600;
+}
+.dw-arch-steps b {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--dw-amber);
+  color: var(--dw-ink);
+  font-family: var(--sl-font-mono);
+  font-size: 0.85rem;
+}
+.dw-arch-steps span {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--sl-color-gray-2);
+}
+.dw-arch-arrow {
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+}
+.dw-arch-arrow::before {
+  content: '';
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(var(--sl-color-gray-4), var(--dw-amber));
+}
+@media (min-width: 56rem) {
+  .dw-arch-arrow::before {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--sl-color-gray-4), var(--dw-amber));
+  }
+}
+
+/* Feature rows: text and a visual side by side, alternating. */
+.dw-feature {
+  display: grid;
+  gap: 1.5rem 3.5rem;
+  align-items: center;
+}
+@media (min-width: 60rem) {
+  .dw-feature {
+    grid-template-columns: 1fr 1.15fr;
+  }
+  .dw-feature-flip .dw-feature-text {
+    order: 2;
+  }
+}
+.sl-markdown-content .dw-feature > * {
+  margin-top: 0;
+  min-width: 0;
+}
+.dw-feature-text p:not(.dw-kicker) {
+  color: var(--sl-color-gray-2);
+  font-size: 1.025rem;
+}
+
+/* Tiles */
+.dw-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+.dw-grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+.sl-markdown-content .dw-grid > * {
+  margin-top: 0;
+}
+.dw-tile,
+.dw-usecase {
+  padding: 1.25rem 1.3rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.75rem;
+  background: var(--sl-color-gray-6);
+  transition: border-color 0.15s, transform 0.15s;
+}
+:root[data-theme='light'] :is(.dw-tile, .dw-usecase, .dw-arch-box) {
+  background: var(--sl-color-gray-7);
+}
+.dw-tile:hover,
+.dw-usecase:hover {
+  border-color: color-mix(in srgb, var(--dw-wake) 60%, transparent);
+  transform: translateY(-2px);
+}
+.sl-markdown-content :is(.dw-tile, .dw-usecase) h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.sl-markdown-content :is(.dw-tile, .dw-usecase) p {
+  margin-top: 0.5rem;
+  font-size: 0.92rem;
+  color: var(--sl-color-gray-2);
+}
+.dw-usecase {
+  border-top: 3px solid var(--dw-amber);
+}
+
+/* The comparison: DuckWake's column picked out. */
+.dw-section-block table {
+  margin-top: 2rem;
+}
+.dw-section-block table :is(th, td):last-child {
+  background: color-mix(in srgb, var(--dw-wake) 9%, transparent);
+  color: var(--sl-color-white);
+}
+
+/* Numbers */
+.dw-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.sl-markdown-content .dw-stats > div {
+  margin: 0;
+  padding: 1.25rem 1.3rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.75rem;
+}
+.dw-stats strong {
+  display: block;
+  font-family: var(--dw-display);
+  font-size: clamp(2rem, 1.5rem + 1.5vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--dw-amber);
+}
+:root[data-theme='light'] .dw-stats strong {
+  color: var(--dw-lake);
+}
+.dw-stats span {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.88rem;
+  color: var(--sl-color-gray-3);
+}
+
+/* Closing call to action */
+.dw-cta {
+  padding: 3rem 2rem;
+  border-radius: 1.1rem;
+  text-align: center;
+  background:
+    radial-gradient(60rem 18rem at 50% 0%, color-mix(in srgb, var(--dw-wake) 22%, transparent), transparent 70%),
+    var(--sl-color-gray-6);
+  border: 1px solid var(--sl-color-hairline-light);
+}
+:root[data-theme='light'] .dw-cta {
+  background:
+    radial-gradient(60rem 18rem at 50% 0%, color-mix(in srgb, var(--dw-lake) 14%, transparent), transparent 70%),
+    var(--sl-color-gray-7);
+}
+.sl-markdown-content .dw-cta .dw-h2 {
+  margin-inline: auto;
+}
+.dw-cta > p {
+  color: var(--sl-color-gray-2);
+}
+.dw-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.dw-cta-note {
+  font-size: 0.85rem;
+  color: var(--sl-color-gray-3) !important;
+}
+
+/* The home page's own sections carry no section rule from brand.css. */
+.dw-section-block .sl-heading-wrapper,
+.dw-feature .sl-heading-wrapper,
+.dw-cta .sl-heading-wrapper {
+  border-top: 0 !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* The headline's last words */
+.dw-accent {
+  color: var(--dw-amber);
+}
+:root[data-theme='light'] .dw-accent {
+  color: var(--dw-lake);
+}
+
+.dw-section-block table {
+  display: table;
+  width: 100%;
+}
+@media (max-width: 50rem) {
+  .dw-section-block table {
+    display: block;
+  }
+}
