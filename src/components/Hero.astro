@@ -1,0 +1,50 @@
+---
+// The home page's hero: an open-source label, the headline and the actions on the left; on the right a view's
+// SQL and the table it keeps, as the product would show them. Starlight uses this component only on pages with
+// a `hero` in their frontmatter (the home page).
+import { LinkButton } from '@astrojs/starlight/components';
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, actions = [] } = data.hero || {};
+---
+
+<div class="dw-hero">
+  <div class="dw-hero-copy">
+    <a class="dw-pill" href="https://github.com/duckwake/duckwake">
+      <span class="dw-pill-tag">Open source</span> MIT licensed · built on DuckDB 2.0 and DuckLake 1.1
+    </a>
+    <h1 id="_top" data-page-title set:html={title} />
+    {tagline && <p class="dw-hero-tagline" set:html={tagline} />}
+    <div class="dw-hero-actions">
+      {actions.map(({ text, link, variant, icon }) => (
+        <LinkButton href={link} variant={variant} icon={icon?.name}>{text}</LinkButton>
+      ))}
+    </div>
+  </div>
+  <div class="dw-hero-visual" aria-label="A view's SQL and the DuckLake table DuckWake keeps for it">
+    <div class="dw-window">
+      <div class="dw-window-bar"><span>clicks_per_min.sql</span></div>
+      <pre class="dw-window-code"><code><span class="k">SELECT</span> window_start, game_id,
+       <span class="f">count</span>(*) <span class="k">AS</span> n,
+       <span class="f">sum</span>(amount) <span class="k">AS</span> revenue
+<span class="k">FROM</span> <span class="f">TUMBLE</span>(clicks, ts, <span class="k">INTERVAL</span> <span class="n">1</span> <span class="k">MINUTE</span>)
+<span class="k">GROUP BY ALL</span></code></pre>
+    </div>
+    <div class="dw-flow-arrow" aria-hidden="true">
+      <span>Kafka</span><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v14m0 0-5-5m5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>one transaction per epoch</span>
+    </div>
+    <div class="dw-window">
+      <div class="dw-window-bar">
+        <span>lake.analytics.clicks_per_min</span><span class="dw-live"><i></i>epoch 1,284 · committed 2 s ago</span>
+      </div>
+      <table class="dw-window-table">
+        <thead><tr><th>window_start</th><th>game_id</th><th>n</th><th>revenue</th></tr></thead>
+        <tbody>
+          <tr><td>12:04:00</td><td>aurora</td><td>1,912</td><td>8,420.50</td></tr>
+          <tr><td>12:04:00</td><td>basalt</td><td>1,377</td><td>6,031.25</td></tr>
+          <tr class="dw-new"><td>12:05:00</td><td>aurora</td><td>2,045</td><td>9,118.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
