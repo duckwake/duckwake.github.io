@@ -60,7 +60,7 @@ already, and DuckWake does not try to be one of them.
 
 ## Where it stands
 
-DuckWake is open source under the MIT license, at version 0.1, built on DuckDB 2.0 and DuckLake 1.1. It reads JSON
+DuckWake is open source under the MIT license, at version 0.2, built on DuckDB 2.0 and DuckLake 1.1. It reads JSON
 from Kafka, with SASL and TLS, and writes to lakes on local disk or S3. Views filter, join lake tables, aggregate
 over windows or per group, and read other views and lake tables through their change feeds. Workers fail over and
 rebalance on their own, and every part has metrics, alerts and an integration suite in CI.
