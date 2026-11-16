@@ -41,6 +41,23 @@ const pages = {
 for (const f of readdirSync(path.join(repo, 'docs/design'))) {
   if (f.endsWith('.md') && f !== 'README.md') pages[`docs/design/${f}`] = `docs/design/${f.slice(0, -3)}`;
 }
+// The one line under each page's title (src/components/PageTitle.astro), and the page's search summary.
+const descriptions = {
+  'docs/sql.md': 'Every duckwake_* function: sources, views, their lifecycle, inspection, and the aggregates a view can use.',
+  'docs/cli.md': 'The duckwake command line: a command per SQL function, the worker, a test producer and the playground.',
+  'docs/server.md': 'Run duckwaked: a worker plus the SQL functions over Quack, with tokens, metrics and supervision.',
+  'docs/extension.md': 'LOAD duckwake in your own DuckDB 2.0: the same functions and a worker in that process.',
+  'docs/alerts.md': 'The metrics a worker exports, the Prometheus alerts and Grafana dashboard, and what to do when each fires.',
+  'docs/performance.md': 'The four worker flags for parallel and pipelined epochs, and what they measured.',
+  'docs/roadmap.md': 'What is built, and what stands between DuckWake and production.',
+  'docs/releasing.md': 'Versions, what a release publishes, and how to make one.',
+  'docs/testing.md': 'What the test suites verify, and how to run them.',
+  'docs/internals.md': 'How the code maps to the design: the view compiler, circuits, state, and the known gaps.',
+  'CHANGELOG.md': 'Every notable change, release by release.',
+  'dbt/README.md': 'Kafka sources and streaming views as dbt models, with dbt-duckdb.',
+  'docs/design/README.md': 'The reasoning behind the engine, with comparisons to other streaming engines.',
+};
+
 // Folders copied next to the pages that use them (their images keep their relative paths).
 const assets = { 'docs/design/images': 'docs/design/images' };
 
@@ -89,7 +106,9 @@ function convert(text, from) {
     if (fence) return line;
     return line.replace(/(!?\[[^\]]*\]\()([^)\s]+)(\))/g, (_, open, target, close) => open + rewrite(target, from) + close);
   });
-  const front = ['---', `title: ${JSON.stringify(title)}`, `editUrl: ${JSON.stringify(`${GITHUB}/edit/main/${from}`)}`, '---', ''];
+  const front = ['---', `title: ${JSON.stringify(title)}`];
+  if (descriptions[from]) front.push(`description: ${JSON.stringify(descriptions[from])}`);
+  front.push(`editUrl: ${JSON.stringify(`${GITHUB}/edit/main/${from}`)}`, '---', '');
   return front.concat(body).join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
