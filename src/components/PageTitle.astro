@@ -10,7 +10,6 @@ const sections: Record<string, string> = {
   reference: 'Reference',
   operations: 'Operations',
   project: 'Project',
-  design: 'Design documents',
 };
 const section = id.startsWith('docs/') ? sections[id.split('/')[1]] : undefined;
 const description = entry.data.description;

@@ -90,4 +90,4 @@ query waits for `--full-refresh`.
 
 - [Quick start](/docs/start/quick-start/): try it.
 - [SQL functions](/docs/reference/sql/): every function and option.
-- [Design documents](/docs/design/): the reasoning in depth, with comparisons to other streaming engines.
+- [Design documents](https://github.com/duckwake/duckwake/tree/main/docs/design) on GitHub: the reasoning in depth, with comparisons to other streaming engines.
