@@ -25,7 +25,7 @@ export default defineConfig({
         { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
       ],
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/duckwake/duckwake' }],
-      customCss: ['./src/styles/brand.css', './src/styles/home.css'],
+      customCss: ['./src/styles/brand.css', './src/styles/home.css', './src/styles/motion.css'],
       components: {
         Footer: './src/components/Footer.astro',
         PageTitle: './src/components/PageTitle.astro',

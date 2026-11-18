@@ -1,0 +1,1232 @@
+/* The animated scenes (src/components/motion/, src/scripts/motion/): a framed stage, a caption with the pause
+   button, and each scene's parts. Colours come from brand.css; the three games in the examples are Wake teal,
+   Amber and a light Lake blue. Each scene lays itself out by the width it is given (a container query), so the
+   same scene fits the home page and a docs column. */
+
+:root {
+  --dw-g-aurora: var(--dw-wake);
+  --dw-g-basalt: var(--dw-amber);
+  --dw-g-cobalt: #79b4d6;
+  --dw-alert: #ef7d62;
+  --dw-scene-bg: var(--sl-color-gray-6);
+  --dw-scene-panel: var(--sl-color-black);
+}
+:root[data-theme='light'] {
+  --dw-g-cobalt: #1d5a7a;
+  --dw-alert: #b5442b;
+  --dw-scene-bg: var(--sl-color-gray-7);
+  --dw-scene-panel: #fff;
+}
+
+/* Frame */
+.dw-scene {
+  margin: 2rem 0 0;
+}
+.dw-scene-stage {
+  position: relative;
+  container-type: inline-size;
+  padding: 1.1rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.9rem;
+  background: var(--dw-scene-bg);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--sl-color-gray-2);
+  overflow: hidden;
+}
+.dw-scene-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.dw-ghost {
+  z-index: 2;
+  will-change: transform;
+}
+.dw-scene-caption {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--sl-color-gray-3);
+}
+.dw-scene-caption code {
+  font-size: 0.85em;
+}
+.dw-scene-toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sl-color-gray-2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.dw-scene-toggle:hover {
+  color: var(--sl-color-white);
+  border-color: var(--sl-color-accent);
+}
+.dw-scene-toggle:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 2px;
+}
+/* Without JavaScript nothing plays, so there is nothing to pause. */
+[data-dw-scene]:not([data-state]) [data-dw-toggle] {
+  display: none;
+}
+[data-dw-toggle][data-held='false'] .dw-icon-play,
+[data-dw-toggle][data-held='true'] .dw-icon-pause {
+  display: none;
+}
+
+/* Shared parts: an event, a small label, a panel in the lake. */
+.dw-ev {
+  display: inline-block;
+  flex: none;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 0.2rem;
+  background: var(--dw-g-aurora);
+}
+.dw-ev[data-game='basalt'] {
+  background: var(--dw-g-basalt);
+}
+.dw-ev[data-game='cobalt'] {
+  background: var(--dw-g-cobalt);
+}
+.dw-scene-stage :is(p, ol, ul, dl, dd, table) {
+  margin: 0;
+}
+.dw-scene-stage code {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 0.95em;
+  color: var(--sl-color-gray-1);
+}
+.dw-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
+}
+.dw-label code {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.dw-tag {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.35rem;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  color: var(--sl-color-white);
+  white-space: nowrap;
+}
+
+/* Engine: one epoch (EngineFlow.astro) */
+.dw-eng {
+  display: grid;
+  gap: 1.1rem;
+}
+/* A docs column: the topic and the worker side by side, the lake under them. Wider: three columns. */
+@container (min-width: 34rem) {
+  .dw-eng {
+    grid-template-columns: 1fr 1.2fr;
+    align-items: start;
+  }
+  .dw-eng-out {
+    grid-column: 1 / -1;
+    grid-template-columns: 1.2fr 1fr;
+  }
+  .dw-eng-out > .dw-eng-label {
+    grid-column: 1 / -1;
+  }
+}
+@container (min-width: 58rem) {
+  .dw-eng {
+    grid-template-columns: 0.9fr 1.05fr 1.2fr;
+  }
+  .dw-eng-out {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+  }
+}
+.dw-eng-col {
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.dw-eng-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
+}
+.dw-eng-label code {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.75rem;
+}
+.dw-eng-lanes {
+  display: grid;
+  gap: 0.45rem;
+}
+.dw-eng-lane {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.1rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.5rem;
+  background: var(--dw-scene-panel);
+}
+.dw-eng-pid {
+  flex: none;
+  width: 1.3rem;
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-eng-queue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.dw-eng-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.8rem;
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-eng-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.dw-eng-legend .dw-ev {
+  width: 0.55rem;
+  height: 0.55rem;
+}
+.dw-eng-core {
+  padding: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--dw-wake) 55%, transparent);
+  border-radius: 0.75rem;
+  background: var(--sl-color-accent-low);
+}
+.dw-eng-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.dw-eng-epoch,
+.dw-eng-snap {
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--sl-color-gray-3);
+}
+.dw-eng-epoch b,
+.dw-eng-snap b {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.dw-eng-timer {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--sl-color-gray-4) 45%, transparent);
+  overflow: hidden;
+}
+.dw-eng-timer i {
+  display: block;
+  height: 100%;
+  background: var(--dw-amber);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.dw-eng-steps {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0;
+  list-style: none;
+}
+.dw-eng-steps li {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  column-gap: 0.55rem;
+  align-items: center;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.25s;
+}
+.dw-eng-steps b {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--sl-color-gray-5);
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  color: var(--sl-color-white);
+  transition: background-color 0.25s, color 0.25s;
+}
+.dw-eng-steps span {
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.dw-eng-steps small {
+  font-size: 0.74rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-eng-steps li[data-active] {
+  background: color-mix(in srgb, var(--dw-wake) 16%, transparent);
+}
+.dw-eng-steps li[data-active] b {
+  background: var(--dw-amber);
+  color: var(--dw-ink);
+}
+/* The bench: what the worker holds in this epoch. The events it read on top, folded into their changes below;
+   the transaction covers both. */
+.dw-eng-bench {
+  display: grid;
+  grid-template-rows: minmax(1.6rem, auto) minmax(1.6rem, auto);
+  row-gap: 0.55rem;
+  padding: 0.65rem 0.6rem;
+  border: 1px dashed color-mix(in srgb, var(--dw-wake) 45%, transparent);
+  border-radius: 0.6rem;
+}
+.dw-eng-bench > * {
+  min-width: 0;
+}
+.dw-eng-batch,
+.dw-eng-deltas {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 0.3rem;
+  opacity: 0;
+}
+.dw-eng-batch {
+  grid-area: 1 / 1;
+}
+.dw-eng-deltas {
+  grid-area: 2 / 1;
+}
+.dw-eng-txn {
+  grid-row: 1 / 3;
+  grid-column: 1;
+}
+.dw-eng-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 999px;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+}
+.dw-eng-delta b {
+  color: var(--sl-color-white);
+}
+.dw-eng-delta .dw-ev {
+  width: 0.6rem;
+  height: 0.6rem;
+}
+.dw-eng-txn {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.35rem;
+}
+.dw-eng-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  border: 1.5px solid var(--dw-amber);
+  border-radius: 0.55rem;
+}
+:root[data-theme='light'] .dw-eng-tags {
+  border-color: #c99212;
+}
+.dw-eng-txn small {
+  font-size: 0.7rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-eng-out {
+  outline: 2px solid transparent;
+  outline-offset: 4px;
+  border-radius: 0.6rem;
+}
+.dw-eng-panel {
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.6rem;
+  background: var(--dw-scene-panel);
+  overflow: hidden;
+}
+.dw-eng-name {
+  padding: 0.4rem 0.65rem;
+  border-bottom: 1px solid var(--sl-color-hairline);
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-scene-stage .dw-eng-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--sl-font-mono);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+.dw-scene-stage .dw-eng-table :is(th, td) {
+  padding: 0.28rem 0.65rem;
+  border: 0;
+  text-align: end;
+  white-space: nowrap;
+}
+.dw-eng-table :is(th, td):first-child {
+  text-align: start;
+}
+.dw-eng-table th {
+  font-weight: 500;
+  color: var(--sl-color-gray-3);
+}
+.dw-eng-table td {
+  color: var(--sl-color-gray-1);
+}
+.dw-eng-table .dw-ev {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-inline-end: 0.4rem;
+}
+.dw-eng-ckpt {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.65rem;
+  padding: 0.45rem 0.65rem;
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.dw-eng-ckpt dt {
+  color: var(--sl-color-gray-3);
+}
+.dw-eng-ckpt dd {
+  min-width: 0;
+  color: var(--sl-color-gray-1);
+  border-radius: 0.25rem;
+}
+.dw-eng-ckpt dd span {
+  display: inline-block;
+  margin-inline-end: 0.55rem;
+  white-space: nowrap;
+}
+.dw-eng-ckpt b {
+  font-weight: 500;
+}
+
+/* Exactly once: a worker killed mid-epoch (ExactlyOnce.astro) */
+.dw-eo {
+  display: grid;
+  gap: 0.9rem;
+}
+.dw-eo-topic {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.8rem;
+}
+.dw-eo-topic small {
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-eo-events {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.5rem;
+  background: var(--dw-scene-panel);
+}
+.dw-eo-workers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.dw-eo-worker {
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  min-width: 0;
+  min-height: 9.25rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--dw-wake) 50%, transparent);
+  border-radius: 0.7rem;
+  background: var(--sl-color-accent-low);
+  transition: border-color 0.3s, background-color 0.3s;
+}
+.dw-eo-worker[data-dead] {
+  border-color: color-mix(in srgb, var(--dw-alert) 65%, transparent);
+  background: color-mix(in srgb, var(--dw-alert) 8%, transparent);
+}
+.dw-eo-whead {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.dw-eo-whead strong {
+  font-family: var(--sl-font-mono);
+  font-size: 0.8rem;
+  color: var(--sl-color-white);
+}
+.dw-eo-wstate {
+  margin-inline-start: auto;
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+  color: var(--sl-color-text-accent);
+}
+[data-dead] .dw-eo-wstate {
+  color: var(--dw-alert);
+}
+.dw-eo-beat,
+.dw-fo-beat {
+  position: relative;
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--dw-wake);
+  transition: background-color 0.3s;
+}
+.dw-eo-beat i,
+.dw-fo-beat i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0;
+}
+[data-dead] :is(.dw-eo-beat, .dw-fo-beat) {
+  background: var(--dw-alert);
+}
+.dw-eo-lease-slot {
+  min-height: 1.55rem;
+}
+.dw-eo-lease {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--dw-amber);
+  border-radius: 0.4rem;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+  color: var(--sl-color-gray-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+:root[data-theme='light'] .dw-eo-lease {
+  border-color: #c99212;
+}
+.dw-eo-lease > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dw-eo-lease i {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--dw-alert);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.dw-eo-pending {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px dashed var(--dw-amber);
+  border-radius: 0.55rem;
+  background: var(--dw-scene-panel);
+  transition: border-color 0.3s;
+}
+:root[data-theme='light'] .dw-eo-pending {
+  border-color: #c99212;
+}
+.dw-eo-pending[data-lost] {
+  border-color: var(--dw-alert);
+}
+.dw-eo-plabel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 0.5rem;
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  color: var(--sl-color-white);
+}
+.dw-eo-plabel small {
+  color: var(--sl-color-gray-3);
+}
+[data-lost] .dw-eo-plabel small {
+  color: var(--dw-alert);
+}
+.dw-eo-bag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  min-height: 0.7rem;
+}
+.dw-eo-lake {
+  display: grid;
+  gap: 0.5rem;
+}
+.dw-eo-log {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+.dw-eo-commit {
+  display: grid;
+  list-style: none;
+  gap: 0.1rem;
+  min-width: 6.5rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.5rem;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+}
+.dw-eo-commit b {
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.dw-eo-commit b::after {
+  content: ' \2713';
+  color: var(--dw-wake);
+}
+.dw-eo-commit small {
+  color: var(--sl-color-gray-3);
+}
+.dw-scene-stage :is(.dw-eo-status, .dw-wm-status, .dw-fo-status, .dw-cf-status) {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 3.1rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--sl-color-gray-5) 45%, transparent);
+  font-size: 0.82rem;
+  color: var(--sl-color-gray-1);
+}
+:is(.dw-eo-status, .dw-wm-status, .dw-fo-status, .dw-cf-status) b {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--dw-amber);
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  color: var(--dw-ink);
+}
+.dw-eo-verify {
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  color: var(--sl-color-text-accent);
+}
+.dw-eo-verify code {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Watermarks, windows and late events (Watermark.astro). Positions on the axis are percentages of its width. */
+.dw-wm {
+  display: grid;
+  gap: 1rem;
+}
+.dw-wm-plot {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  grid-template-rows: 1.6rem 1.9rem 1.9rem 1.15rem 2.7rem 1.2rem;
+  column-gap: 0.5rem;
+  row-gap: 0.3rem;
+  /* The axis labels reach past the last window by half a label. */
+  padding-inline-end: 1rem;
+}
+.dw-wm-over {
+  position: relative;
+  z-index: 1;
+  grid-area: 1 / 2 / 6 / 3;
+  pointer-events: none;
+}
+.dw-wm-pid {
+  display: grid;
+  align-content: center;
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--sl-color-gray-3);
+}
+.dw-wm-pid[data-pid='0'] {
+  grid-area: 2 / 1;
+}
+.dw-wm-pid[data-pid='1'] {
+  grid-area: 3 / 1;
+}
+.dw-wm-pid small {
+  display: none;
+  font-size: 0.62rem;
+  color: var(--dw-alert);
+}
+.dw-wm-pid[data-idle] small {
+  display: block;
+}
+.dw-wm-track {
+  position: relative;
+  border-radius: 0.4rem;
+  background:
+    repeating-linear-gradient(to right, transparent 0 calc(25% - 1px), var(--sl-color-hairline-light) calc(25% - 1px) 25%),
+    var(--dw-scene-panel);
+  transition: opacity 0.4s;
+}
+.dw-wm-track[data-track='0'] {
+  grid-area: 2 / 2;
+}
+.dw-wm-track[data-track='1'] {
+  grid-area: 3 / 2;
+}
+.dw-wm-pid[data-idle] + .dw-wm-track {
+  opacity: 0.4;
+}
+.dw-wm-ev {
+  position: absolute;
+  top: 50%;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin: -0.3rem 0 0 -0.3rem;
+  border-radius: 0.15rem;
+  background: var(--dw-g-aurora);
+  transition: background-color 0.3s;
+}
+@container (max-width: 32rem) {
+  .dw-wm-ev {
+    width: 0.45rem;
+    height: 0.45rem;
+    margin: -0.225rem 0 0 -0.225rem;
+  }
+}
+.dw-wm-ev[data-p='1'] {
+  background: var(--dw-g-cobalt);
+}
+.dw-wm-ev[data-late] {
+  background: var(--dw-alert);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dw-alert) 35%, transparent);
+}
+.dw-wm-newest {
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  width: 2px;
+  margin-inline-start: -1px;
+  border-radius: 1px;
+  background: var(--sl-color-gray-2);
+}
+.dw-wm-line {
+  position: absolute;
+  top: 1.25rem;
+  bottom: 0;
+  width: 2px;
+  margin-inline-start: -1px;
+  background: var(--dw-amber);
+}
+:root[data-theme='light'] .dw-wm-line {
+  background: #c99212;
+}
+.dw-wm-line small {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 0.15rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--dw-amber);
+  font-family: var(--sl-font-mono);
+  font-size: 0.64rem;
+  white-space: nowrap;
+  color: var(--dw-ink);
+  transform: translateX(-50%);
+}
+.dw-wm-line b {
+  font-weight: 600;
+}
+.dw-wm-delayrow {
+  position: relative;
+  grid-area: 4 / 2;
+}
+.dw-wm-delay {
+  position: absolute;
+  top: 0.15rem;
+  width: 12.5%;
+  height: 0.4rem;
+  border: 1.5px solid var(--dw-amber);
+  border-top: 0;
+  border-radius: 0 0 0.2rem 0.2rem;
+}
+:root[data-theme='light'] .dw-wm-delay {
+  border-color: #c99212;
+}
+.dw-wm-delay small {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  font-family: var(--sl-font-mono);
+  font-size: 0.6rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--sl-color-gray-3);
+  transform: translate(-50%, 0.1rem);
+}
+.dw-wm-wins {
+  position: relative;
+  grid-area: 5 / 2;
+}
+.dw-wm-win {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(25% - 4px);
+  margin-inline-start: 2px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.45rem;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+  line-height: 1.25;
+  transition: background-color 0.4s, border-color 0.4s;
+}
+.dw-wm-win b {
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.dw-wm-win small {
+  font-size: 0.6rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-wm-win[data-written] {
+  border-color: color-mix(in srgb, var(--dw-wake) 60%, transparent);
+  background: color-mix(in srgb, var(--dw-wake) 18%, var(--dw-scene-panel));
+}
+.dw-wm-win[data-written] small {
+  color: var(--sl-color-text-accent);
+}
+.dw-wm-axis {
+  position: relative;
+  grid-area: 6 / 2;
+  font-family: var(--sl-font-mono);
+  font-size: 0.62rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-wm-axis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+}
+.dw-wm-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.dw-wm-table {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.dw-wm-table ul {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  min-height: 5.9rem;
+  padding: 0;
+  list-style: none;
+}
+.dw-wm-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.4rem;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+  list-style: none;
+  white-space: nowrap;
+}
+.dw-wm-row b {
+  font-weight: 500;
+  color: var(--sl-color-white);
+}
+.dw-wm-row[data-late-row] {
+  border-color: color-mix(in srgb, var(--dw-alert) 55%, transparent);
+}
+.dw-wm-row[data-late-row] span {
+  color: var(--dw-alert);
+}
+
+/* Workers, failover and rebalancing (Failover.astro) */
+.dw-fo {
+  display: grid;
+  gap: 0.9rem;
+}
+.dw-fo-workers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+.dw-fo-worker {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--dw-wake) 50%, transparent);
+  border-radius: 0.7rem;
+  background: var(--sl-color-accent-low);
+  transition: border-color 0.3s, background-color 0.3s;
+}
+.dw-fo-worker[data-dead] {
+  border-color: color-mix(in srgb, var(--dw-alert) 65%, transparent);
+  background: color-mix(in srgb, var(--dw-alert) 8%, transparent);
+}
+.dw-fo-whead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dw-fo-whead strong {
+  font-family: var(--sl-font-mono);
+  font-size: 0.8rem;
+  color: var(--sl-color-white);
+}
+.dw-fo-wstate {
+  margin-inline-start: auto;
+  font-family: var(--sl-font-mono);
+  font-size: 0.66rem;
+  color: var(--sl-color-text-accent);
+}
+[data-dead] .dw-fo-wstate {
+  color: var(--dw-alert);
+}
+.dw-fo-load {
+  display: block;
+  height: 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--sl-color-gray-4) 45%, transparent);
+  overflow: hidden;
+}
+.dw-fo-load i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--dw-wake);
+}
+.dw-fo-views {
+  display: grid;
+  gap: 0.3rem;
+  min-height: 5.6rem;
+  align-content: start;
+  padding: 0;
+  list-style: none;
+}
+.dw-fo-view {
+  overflow: hidden;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.4rem;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.68rem;
+  list-style: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sl-color-gray-1);
+}
+[data-dead] .dw-fo-view {
+  opacity: 0.55;
+}
+.dw-fo-lake {
+  display: grid;
+  gap: 0.45rem;
+}
+.dw-fo-hbs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+.dw-fo-hb {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.4rem;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  color: var(--sl-color-gray-3);
+}
+.dw-fo-hb b {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.dw-fo-hb[data-stale] {
+  border-color: color-mix(in srgb, var(--dw-alert) 60%, transparent);
+  color: var(--dw-alert);
+}
+@container (max-width: 30rem) {
+  .dw-fo-workers,
+  .dw-fo-hbs {
+    gap: 0.4rem;
+  }
+  .dw-fo-worker {
+    padding: 0.5rem;
+  }
+  .dw-fo-wstate {
+    display: none;
+  }
+}
+
+/* The hero's live table (Hero.astro, hero.ts): its pause button sits in the window bar, which keeps it in view
+   at any width: the table's name gives way first, then the commit's age. */
+.dw-hero-visual .dw-window-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dw-hero-visual .dw-live {
+  flex: none;
+}
+@media (max-width: 30rem) {
+  .dw-live-ago {
+    display: none;
+  }
+}
+.dw-live b {
+  display: inline-block;
+  font-weight: 400;
+}
+.dw-live i {
+  flex: none;
+}
+.dw-live-toggle {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-inline-start: 0.2rem;
+  padding: 0;
+  border: 1px solid var(--dw-code-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sl-color-gray-3);
+  cursor: pointer;
+}
+.dw-live-toggle:hover {
+  color: var(--sl-color-white);
+  border-color: var(--sl-color-accent);
+}
+.dw-live-toggle:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 1px;
+}
+
+/* A view over a lake table: backfill, then the change feed (ChangeFeed.astro) */
+.dw-cf {
+  display: grid;
+  grid-template-areas: 'sql' 'src' 'feed' 'out' 'status';
+  gap: 0.8rem;
+}
+@container (min-width: 28rem) {
+  .dw-cf {
+    grid-template-columns: 1.15fr 1fr;
+    grid-template-areas: 'sql sql' 'src out' 'feed feed' 'status status';
+    align-items: start;
+  }
+}
+.dw-cf-sql {
+  grid-area: sql;
+  display: grid;
+  gap: 0.3rem;
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.dw-cf-sql > code {
+  color: var(--sl-color-gray-2);
+}
+.dw-cf-src {
+  grid-area: src;
+}
+.dw-cf-out {
+  grid-area: out;
+}
+.dw-cf-feed {
+  grid-area: feed;
+  display: grid;
+  gap: 0.45rem;
+}
+.dw-cf .dw-cf-status {
+  grid-area: status;
+}
+.dw-cf-panel {
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.6rem;
+  background: var(--dw-scene-panel);
+  overflow: hidden;
+}
+.dw-cf-out {
+  border-color: color-mix(in srgb, var(--dw-wake) 50%, transparent);
+}
+.dw-cf-name {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 0.5rem;
+  padding: 0.4rem 0.65rem;
+  border-bottom: 1px solid var(--sl-color-hairline);
+  font-family: var(--sl-font-mono);
+  font-size: 0.7rem;
+  color: var(--sl-color-gray-2);
+}
+.dw-cf-snap {
+  color: var(--sl-color-gray-3);
+}
+.dw-cf-snap b {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.dw-scene-stage .dw-cf-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--sl-font-mono);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.dw-scene-stage .dw-cf-table :is(th, td) {
+  padding: 0.24rem 0.65rem;
+  border: 0;
+  text-align: start;
+  white-space: nowrap;
+}
+.dw-scene-stage .dw-cf-table th {
+  font-weight: 500;
+  color: var(--sl-color-gray-3);
+}
+.dw-scene-stage .dw-cf-table td {
+  color: var(--sl-color-gray-1);
+}
+.dw-cf-out .dw-cf-table :is(th, td):last-child {
+  text-align: end;
+}
+/* Room for each table's most rows (six players, three countries), so nothing below moves as rows come and go. */
+.dw-cf-src {
+  min-height: calc(1.85rem + 7 * 1.5rem);
+}
+.dw-cf-out {
+  min-height: calc(1.85rem + 4 * 1.5rem);
+}
+.dw-cf tr[data-deleted] td {
+  text-decoration: line-through;
+  color: var(--sl-color-gray-3);
+}
+.dw-cf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0.35rem;
+  min-height: 3.6rem;
+}
+.dw-cf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 1.6rem;
+  padding: 0 0.5rem 0 0.25rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.45rem;
+  background: var(--dw-scene-panel);
+  font-family: var(--sl-font-mono);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  color: var(--sl-color-gray-1);
+}
+.dw-cf-chip b {
+  display: grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.15rem;
+  border-radius: 0.3rem;
+  background: color-mix(in srgb, var(--dw-wake) 25%, transparent);
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.dw-cf-chip[data-weight='-1'] b {
+  background: color-mix(in srgb, var(--dw-alert) 28%, transparent);
+}
+.dw-cf-chip small {
+  font-size: 0.62rem;
+  color: var(--sl-color-gray-3);
+}
+.dw-cf-chip[data-filtered] {
+  text-decoration: line-through;
+}
+@container (max-width: 28rem) {
+  .dw-cf-chips {
+    min-height: 5.5rem;
+  }
+}

@@ -1,0 +1,106 @@
+---
+// Watermarks, windows and late events, animated (src/scripts/motion/watermark.ts, with the story's data in
+// watermark-data.ts): events land on an event-time axis from two partitions, the watermark follows the earlier
+// one, one-minute windows are written as it passes their end, a quiet partition is left out after idle_timeout,
+// and an event for a written window goes to the late-data table. The markup is the last frame.
+import Scene from './Scene.astro';
+import { AXIS_END, BATCHES, STEPS, WINDOWS, clock, counts, frames } from '../../scripts/motion/watermark-data';
+
+interface Props {
+  caption?: string;
+}
+const {
+  caption = 'Event time runs left to right; each square is an event, placed at its time. The watermark is the earlier partition’s newest event minus <code>watermark_delay</code>; each one-minute window of <code>TUMBLE(clicks, ts, INTERVAL 1 MINUTE)</code> is written once the watermark passes its end, and an event for a window already written goes to the late-data table.',
+} = Astro.props;
+
+const pct = (t: number) => `${((t / AXIS_END) * 100).toFixed(3)}%`;
+const all = frames();
+const last = all[all.length - 1];
+const late = new Set(all.flatMap((f) => f.late.map(([p, t]) => `${p}:${t}`)));
+const events = [0, 1].map((p) => BATCHES.flatMap((b) => (p === 0 ? b.p0 : b.p1)));
+const n = counts();
+const written = all.flatMap((f) => f.closes);
+const lateEvents = all.flatMap((f) => f.late);
+const ticks = [0, 60, 120, 180, 240];
+---
+
+<Scene name="watermark" caption={caption}>
+  <div class="dw-wm">
+    <div class="dw-wm-plot">
+      <div class="dw-wm-over" data-over>
+        <span class="dw-wm-line" data-wm style={`left: ${pct(last.watermark!)}`}>
+          <small>watermark <b data-wmt>{clock(last.watermark!)}</b></small>
+        </span>
+      </div>
+      {
+        [0, 1].map((p) => (
+          <>
+            <span class="dw-wm-pid" data-pid={p} data-idle={p === 1 ? '' : undefined}>
+              p{p}
+              {p === 1 && <small>idle</small>}
+            </span>
+            <div class="dw-wm-track" data-track={p}>
+              {events[p].map((t) => (
+                <i class="dw-wm-ev" data-p={p} data-late={late.has(`${p}:${t}`) ? '' : undefined} style={`left: ${pct(t)}`} />
+              ))}
+              <span class="dw-wm-newest" data-newest={p} style={`left: ${pct(last.newest[p]!)}`} />
+            </div>
+          </>
+        ))
+      }
+      <div class="dw-wm-delayrow">
+        <span class="dw-wm-delay" data-delay style={`left: ${pct(last.watermark!)}`}><small>30 s</small></span>
+      </div>
+      <div class="dw-wm-wins">
+        {
+          WINDOWS.map((start, i) => (
+            <span class="dw-wm-win" data-win={i} data-written={written.includes(i) ? '' : undefined} style={`left: ${pct(start)}`}>
+              <b>{clock(start).slice(0, 5)}</b>
+              <small data-wstate>{written.includes(i) ? 'written' : 'open'}</small>
+            </span>
+          ))
+        }
+      </div>
+      <div class="dw-wm-axis">
+        {ticks.map((t) => <span style={`left: ${pct(t)}`}>{clock(t).slice(0, 5)}</span>)}
+      </div>
+    </div>
+
+    <div class="dw-wm-tables">
+      <div class="dw-wm-table">
+        <p class="dw-label">Table <code>clicks_per_min</code></p>
+        <ul>
+          {
+            WINDOWS.slice(0, 3).map((start, i) => (
+              <li class="dw-wm-row" data-row={i}>
+                <span>{clock(start)}</span>
+                <b>n = {n[i]}</b>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div class="dw-wm-table">
+        <p class="dw-label">Late-data table</p>
+        <ul>
+          {
+            lateEvents.map(([p, t]) => (
+              <li class="dw-wm-row" data-late-row>
+                <span>{clock(t)}</span>
+                <b>p{p}</b>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <p class="dw-wm-status"><b data-stepno>{STEPS.length}</b><span data-status set:html={STEPS[STEPS.length - 1]} /></p>
+  </div>
+</Scene>
+
+<script>
+  import { mount } from '../../scripts/motion/scene';
+  import { watermark } from '../../scripts/motion/watermark';
+  mount('watermark', watermark);
+</script>

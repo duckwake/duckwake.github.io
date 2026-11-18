@@ -1,6 +1,6 @@
 /* The home page (src/content/docs/index.mdx, src/components/Hero.astro): a hero with the product beside it, a
-   works-with strip, the architecture, alternating feature sections, tiles, a comparison, numbers and a closing
-   call to action. Colours come from brand.css. */
+   works-with strip, the engine at work (an animated scene, styled in motion.css), alternating feature sections,
+   tiles, a comparison, numbers and a closing call to action. Colours come from brand.css. */
 
 /* Hero */
 .dw-hero {
@@ -209,104 +209,6 @@
   margin-top: 0.9rem;
 }
 
-/* Architecture */
-.dw-arch {
-  display: grid;
-  gap: 1rem;
-  margin-top: 2.5rem;
-}
-@media (min-width: 56rem) {
-  .dw-arch {
-    grid-template-columns: 1fr 2.5rem 1.35fr 2.5rem 1fr;
-    align-items: center;
-  }
-}
-.sl-markdown-content .dw-arch > * {
-  margin-top: 0;
-}
-.dw-arch-col {
-  display: grid;
-  gap: 0.75rem;
-}
-.dw-arch-title {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--sl-color-gray-3);
-}
-.sl-markdown-content .dw-arch-col > * {
-  margin-top: 0;
-}
-.dw-arch-box {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--sl-color-hairline-light);
-  border-radius: 0.65rem;
-  background: var(--sl-color-gray-6);
-}
-.dw-arch-box strong {
-  color: var(--sl-color-white);
-}
-.dw-arch-box span {
-  font-size: 0.85rem;
-  color: var(--sl-color-gray-3);
-}
-.dw-arch-core {
-  padding: 1.1rem;
-  border: 1px solid color-mix(in srgb, var(--dw-wake) 55%, transparent);
-  border-radius: 0.9rem;
-  background: var(--sl-color-accent-low);
-}
-.dw-arch-steps {
-  display: grid;
-  gap: 0.6rem;
-}
-.sl-markdown-content .dw-arch-steps > div {
-  display: grid;
-  grid-template-columns: 1.75rem 1fr;
-  column-gap: 0.75rem;
-  margin: 0;
-  color: var(--sl-color-white);
-  font-weight: 600;
-}
-.dw-arch-steps b {
-  grid-row: span 2;
-  display: grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  background: var(--dw-amber);
-  color: var(--dw-ink);
-  font-family: var(--sl-font-mono);
-  font-size: 0.85rem;
-}
-.dw-arch-steps span {
-  font-weight: 400;
-  font-size: 0.85rem;
-  color: var(--sl-color-gray-2);
-}
-.dw-arch-arrow {
-  height: 1.5rem;
-  display: grid;
-  place-items: center;
-}
-.dw-arch-arrow::before {
-  content: '';
-  width: 2px;
-  height: 100%;
-  background: linear-gradient(var(--sl-color-gray-4), var(--dw-amber));
-}
-@media (min-width: 56rem) {
-  .dw-arch-arrow::before {
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, var(--sl-color-gray-4), var(--dw-amber));
-  }
-}
-
 /* Feature rows: text and a visual side by side, alternating. */
 .dw-feature {
   display: grid;
@@ -351,7 +253,7 @@
   background: var(--sl-color-gray-6);
   transition: border-color 0.15s, transform 0.15s;
 }
-:root[data-theme='light'] :is(.dw-tile, .dw-usecase, .dw-arch-box) {
+:root[data-theme='light'] :is(.dw-tile, .dw-usecase) {
   background: var(--sl-color-gray-7);
 }
 .dw-tile:hover,
@@ -373,10 +275,11 @@
 }
 
 /* The comparison: DuckWake's column picked out. */
-.dw-section-block table {
+/* Only the comparison table: a scene's own tables (inside `.not-content`) are left alone. */
+.dw-section-block table:not(:where(.not-content *)) {
   margin-top: 2rem;
 }
-.dw-section-block table :is(th, td):last-child {
+.dw-section-block table:not(:where(.not-content *)) :is(th, td):last-child {
   background: color-mix(in srgb, var(--dw-wake) 9%, transparent);
   color: var(--sl-color-white);
 }
@@ -462,12 +365,12 @@
   color: var(--dw-lake);
 }
 
-.dw-section-block table {
+.dw-section-block table:not(:where(.not-content *)) {
   display: table;
   width: 100%;
 }
 @media (max-width: 50rem) {
-  .dw-section-block table {
+  .dw-section-block table:not(:where(.not-content *)) {
     display: block;
   }
 }

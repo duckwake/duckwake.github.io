@@ -1,0 +1,128 @@
+---
+// One epoch of a view, animated (src/scripts/motion/engine.ts): events arrive on a topic's partitions, the worker
+// reads them, stages only the groups that changed, and commits the view's rows, its state and the offsets it read
+// in one DuckLake transaction. The view counts clicks per game: `SELECT game_id, count(*) AS n, sum(amount) AS
+// revenue FROM clicks GROUP BY game_id`. The markup is the still frame shown before it plays.
+import Scene from './Scene.astro';
+
+interface Props {
+  caption?: string;
+}
+const {
+  caption = 'One epoch of the view <code>clicks_by_game</code>. The worker reads the events that arrived, updates only the games that got new ones, and commits the new rows, its running totals and the offsets it read in one DuckLake transaction: all of them land, or none.',
+} = Astro.props;
+
+const fmt = (n: number, d = 0) =>
+  n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const games = [
+  { id: 'aurora', n: 12483, revenue: 54920.5 },
+  { id: 'basalt', n: 9977, revenue: 43118.25 },
+  { id: 'cobalt', n: 4102, revenue: 17733 },
+];
+const parts = [
+  { p: 0, offset: 1204, queued: ['aurora', 'basalt', 'aurora'] },
+  { p: 1, offset: 988, queued: ['cobalt', 'aurora'] },
+  { p: 2, offset: 1131, queued: ['basalt', 'basalt', 'aurora', 'cobalt'] },
+];
+---
+
+<Scene name="engine" caption={caption} class="dw-scene-wide">
+  <div class="dw-eng">
+    <section class="dw-eng-col dw-eng-in">
+      <p class="dw-eng-label">Kafka topic <code>clicks</code></p>
+      <div class="dw-eng-lanes">
+        {
+          parts.map(({ p, queued }) => (
+            <div class="dw-eng-lane" data-part={p}>
+              <span class="dw-eng-pid">p{p}</span>
+              <span class="dw-eng-queue">
+                {queued.map((g) => (
+                  <i class="dw-ev" data-game={g} />
+                ))}
+              </span>
+            </div>
+          ))
+        }
+      </div>
+      <p class="dw-eng-legend">
+        {
+          games.map(({ id }) => (
+            <span>
+              <i class="dw-ev" data-game={id} />
+              {id}
+            </span>
+          ))
+        }
+      </p>
+    </section>
+
+    <section class="dw-eng-col dw-eng-core">
+      <div class="dw-eng-head">
+        <p class="dw-eng-label">Worker</p>
+        <span class="dw-eng-epoch">epoch <b data-epoch>1,284</b></span>
+      </div>
+      <span class="dw-eng-timer"><i data-timer></i></span>
+      <ol class="dw-eng-steps">
+        <li data-step="read"><b>1</b><span>Read</span><small>the events that arrived</small></li>
+        <li data-step="stage"><b>2</b><span>Stage</span><small>only the games that changed</small></li>
+        <li data-step="commit"><b>3</b><span>Commit</span><small>in one DuckLake transaction</small></li>
+      </ol>
+      <div class="dw-eng-bench">
+        <span class="dw-eng-batch" data-batch></span>
+        <span class="dw-eng-deltas" data-deltas></span>
+        <span class="dw-eng-txn" data-txn>
+          <span class="dw-eng-tags">
+            <span class="dw-tag" data-tag="rows">rows</span>
+            <span class="dw-tag" data-tag="state">state</span>
+            <span class="dw-tag" data-tag="offsets">offsets</span>
+          </span>
+          <small>one transaction</small>
+        </span>
+      </div>
+    </section>
+
+    <section class="dw-eng-col dw-eng-out" data-lake>
+      <p class="dw-eng-label">DuckLake <span class="dw-eng-snap">snapshot <b data-snap>5,112</b></span></p>
+      <div class="dw-eng-panel">
+        <p class="dw-eng-name" data-land="rows">analytics.clicks_by_game</p>
+        <table class="dw-eng-table">
+          <thead><tr><th>game_id</th><th>n</th><th>revenue</th></tr></thead>
+          <tbody>
+            {
+              games.map(({ id, n, revenue }) => (
+                <tr data-row={id}>
+                  <td><i class="dw-ev" data-game={id} />{id}</td>
+                  <td data-n>{fmt(n)}</td>
+                  <td data-rev>{fmt(revenue, 2)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="dw-eng-panel">
+        <p class="dw-eng-name">checkpoint</p>
+        <dl class="dw-eng-ckpt">
+          <dt data-land="state">state</dt>
+          <dd data-state>count and sum per game</dd>
+          <dt data-land="offsets">offsets</dt>
+          <dd data-offsets>
+            {
+              parts.map(({ p, offset }) => (
+                <span>
+                  p{p} <b data-off={p}>{fmt(offset)}</b>
+                </span>
+              ))
+            }
+          </dd>
+        </dl>
+      </div>
+    </section>
+  </div>
+</Scene>
+
+<script>
+  import { mount } from '../../scripts/motion/scene';
+  import { engine } from '../../scripts/motion/engine';
+  mount('engine', engine);
+</script>

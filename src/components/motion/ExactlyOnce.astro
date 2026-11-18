@@ -1,0 +1,79 @@
+---
+// A worker killed in the middle of an epoch, animated (src/scripts/motion/recovery.ts): its transaction never
+// commits, another worker takes the view's lease once the heartbeat stops, resumes from the last commit and
+// computes the same epoch from the same offsets. The markup is the last frame, shown before it plays.
+import Scene from './Scene.astro';
+
+interface Props {
+  caption?: string;
+}
+const {
+  caption = 'A worker killed before it commits leaves nothing behind: its epoch was one transaction that never committed. Once its heartbeat stops for <code>--lease-timeout</code>, another worker takes the view, reads the last commit and computes the same epoch from the same offsets, so each event is counted once.',
+} = Astro.props;
+const events = ['aurora', 'basalt', 'aurora', 'cobalt', 'aurora', 'basalt', 'aurora'];
+const workers = ['w1', 'w2'];
+---
+
+<Scene name="recovery" caption={caption}>
+  <div class="dw-eo">
+    <div class="dw-eo-topic">
+      <p class="dw-label">Kafka <code>clicks</code></p>
+      <span class="dw-eo-events" data-events>
+        {events.map((g) => <i class="dw-ev" data-game={g} />)}
+      </span>
+      <small>offsets 4,200–4,349</small>
+    </div>
+
+    <div class="dw-eo-workers">
+      {
+        workers.map((w) => (
+          <div class="dw-eo-worker" data-w={w} data-dead={w === 'w1' ? '' : undefined}>
+            <div class="dw-eo-whead">
+              <span class="dw-eo-beat" data-beat>
+                <i />
+              </span>
+              <strong>{w}</strong>
+              <span class="dw-eo-wstate" data-wstate>
+                {w === 'w1' ? 'killed' : 'running'}
+              </span>
+            </div>
+            <div class="dw-eo-lease-slot">
+              <span class="dw-eo-lease" data-lease style={w === 'w1' ? 'visibility: hidden' : undefined}>
+                <span>
+                  lease <code>clicks_per_min</code>
+                </span>
+                <i data-lease-timer />
+              </span>
+            </div>
+            <div class="dw-eo-pending" data-pending style="opacity: 0">
+              <span class="dw-eo-plabel">
+                epoch 43 <small data-plabel>not committed</small>
+              </span>
+              <span class="dw-eo-bag" data-bag />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="dw-eo-lake">
+      <p class="dw-label">DuckLake: commits of <code>clicks_per_min</code></p>
+      <ol class="dw-eo-log">
+        <li class="dw-eo-commit" data-epoch="41"><b>epoch 41</b><small>offset 4,050</small></li>
+        <li class="dw-eo-commit" data-epoch="42"><b>epoch 42</b><small>offset 4,200</small></li>
+        <li class="dw-eo-commit" data-epoch="43"><b>epoch 43</b><small>offset 4,350</small></li>
+      </ol>
+    </div>
+
+    <p class="dw-eo-status"><b data-stepno>6</b><span data-status>w2 commits epoch 43: every event in it is counted once.</span></p>
+    <p class="dw-eo-verify" data-verify>
+      <code>duckwake_verify</code> VERIFY OK: the table matches a batch recomputation over every event read
+    </p>
+  </div>
+</Scene>
+
+<script>
+  import { mount } from '../../scripts/motion/scene';
+  import { recovery } from '../../scripts/motion/recovery';
+  mount('recovery', recovery);
+</script>

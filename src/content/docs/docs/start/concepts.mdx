@@ -3,6 +3,12 @@ title: Concepts
 description: Sources, views, epochs, watermarks, the change feed and workers, and how exactly-once output follows from one DuckLake transaction per epoch.
 ---
 
+import EngineFlow from '../../../../components/motion/EngineFlow.astro';
+import ExactlyOnce from '../../../../components/motion/ExactlyOnce.astro';
+import Watermark from '../../../../components/motion/Watermark.astro';
+import Failover from '../../../../components/motion/Failover.astro';
+import ChangeFeed from '../../../../components/motion/ChangeFeed.astro';
+
 DuckWake runs SQL views continuously. You declare where events come from and what to compute; DuckWake keeps
 a DuckLake table equal to that query as new events arrive. This page explains the words the rest of the docs
 use.
@@ -38,6 +44,8 @@ with at most `max_rows` events each, 100,000 by default). In one epoch, for each
 3. **commits** the view's new rows, its state (running totals, open windows) and the offsets it read, in one
    DuckLake transaction.
 
+<EngineFlow />
+
 ## Exactly once
 
 Because rows, state and offsets are written in the same transaction, they are saved together or not at all.
@@ -48,6 +56,8 @@ There is no separate checkpoint store to keep in step with the output, and no tw
 systems: exactly-once is a property of a DuckLake commit. `duckwake_verify(view)` proves it for any view by
 running the view's SQL as one batch query over everything it has read and comparing the result with its table.
 Every test suite in the repository ends with that check, including the ones that kill workers mid-epoch.
+
+<ExactlyOnce />
 
 ## Watermarks, windows and late events
 
@@ -60,6 +70,8 @@ window that has already closed is **late**: it goes to the view's late-data tabl
 disappearing, and messages that cannot be decoded go to the dead-letter table (`lake.__duckwake.dead_letter`). If late events are common, the
 source's `watermark_delay` is shorter than the events' real disorder.
 
+<Watermark />
+
 ## Views over views and lake tables
 
 A view can read another view's table, or any DuckLake table, instead of a Kafka source. It reads the table's
@@ -71,6 +83,8 @@ A new view over lake inputs **backfills**: it first reads the rows its inputs al
 the view was created, then follows the changes after that. Maintenance never expires a snapshot a view still
 needs. Windowed views need their lake inputs insert-only, because a closed window is final.
 
+<ChangeFeed />
+
 ## Workers
 
 A **worker** runs views: `duckwaked`, `duckwake run`, or `duckwake_worker_start()` in the extension. All state is
@@ -78,6 +92,8 @@ in the lake, so workers are interchangeable. They heartbeat into the lake; when 
 views and continue from their last commits. A new worker takes a share of the views by measured load, and
 `duckwake_drain` empties one before maintenance. Each view holds a lease, so two workers never commit the same
 view.
+
+<Failover />
 
 ## Changing views
 

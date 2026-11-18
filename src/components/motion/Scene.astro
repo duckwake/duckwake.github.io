@@ -1,0 +1,32 @@
+---
+// A figure for one animated scene (src/scripts/motion/scene.ts): the stage, an overlay for elements in flight,
+// and a caption with the pause button. The stage is hidden from screen readers, since its text changes as it
+// plays; the caption says in words what the scene shows.
+interface Props {
+  /** The story mounted on this figure, as passed to `mount()`. */
+  name: string;
+  /** What the scene shows, in a sentence or two. HTML is allowed. */
+  caption: string;
+  class?: string;
+}
+const { name, caption, class: className } = Astro.props;
+---
+
+<figure class:list={['dw-scene', 'not-content', className]} data-dw-scene={name}>
+  <div class="dw-scene-stage" aria-hidden="true">
+    <slot />
+    <div class="dw-scene-fx" data-dw-fx></div>
+  </div>
+  <figcaption class="dw-scene-caption">
+    <span set:html={caption} />
+    <button type="button" class="dw-scene-toggle" data-dw-toggle aria-label="Pause animation">
+      <svg class="dw-icon-pause" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"></rect>
+        <rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"></rect>
+      </svg>
+      <svg class="dw-icon-play" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path d="M4.5 2.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4L5.7 2.1a.8.8 0 0 0-1.2.7Z" fill="currentColor"></path>
+      </svg>
+    </button>
+  </figcaption>
+</figure>
