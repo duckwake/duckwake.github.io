@@ -20,6 +20,7 @@ import { LinkButton, Tabs, TabItem } from '@astrojs/starlight/components';
 import EngineFlow from '../../components/motion/EngineFlow.astro';
 import ExactlyOnce from '../../components/motion/ExactlyOnce.astro';
 import ChangeFeed from '../../components/motion/ChangeFeed.astro';
+import UseCases from '../../components/UseCases.astro';
 
 <div class="dw-works">
   <span class="dw-works-label">Works with</span>
@@ -110,12 +111,9 @@ GROUP BY ALL
 <section class="dw-section-block">
 <p class="dw-kicker">Use cases</p>
 <h2 class="dw-h2">What teams build with it</h2>
-<div class="dw-grid dw-grid-4">
-  <div class="dw-usecase"><h3>Live dashboards</h3><p>Revenue, signups or errors per minute, seconds behind the events instead of a night.</p></div>
-  <div class="dw-usecase"><h3>Operational counters</h3><p>Active users, distinct devices and running totals per customer, read straight from DuckDB.</p></div>
-  <div class="dw-usecase"><h3>Incremental marts</h3><p>dbt models over lake tables that update as rows change, without full refreshes on a schedule.</p></div>
-  <div class="dw-usecase"><h3>Data quality</h3><p>Late and malformed events captured in their own tables, with metrics and alerts on them.</p></div>
-</div>
+<p class="dw-sub">Each of these is one view: a <code>SELECT</code> over a Kafka topic or a lake table, kept as a DuckLake table that any DuckDB client reads. Most replace a job on a schedule or a consumer someone wrote by hand.</p>
+
+<UseCases />
 </section>
 
 <section class="dw-section-block">

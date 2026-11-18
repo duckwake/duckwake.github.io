@@ -239,9 +239,6 @@
   margin-top: 2rem;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
-.dw-grid-4 {
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-}
 .sl-markdown-content .dw-grid > * {
   margin-top: 0;
 }
@@ -259,19 +256,114 @@
 .dw-tile:hover,
 .dw-usecase:hover {
   border-color: color-mix(in srgb, var(--dw-wake) 60%, transparent);
+}
+.dw-tile:hover {
   transform: translateY(-2px);
 }
-.sl-markdown-content :is(.dw-tile, .dw-usecase) h3 {
+.sl-markdown-content .dw-tile h3 {
   margin: 0;
   font-size: 1.05rem;
 }
-.sl-markdown-content :is(.dw-tile, .dw-usecase) p {
+.sl-markdown-content .dw-tile p {
   margin-top: 0.5rem;
   font-size: 0.92rem;
   color: var(--sl-color-gray-2);
 }
+
+/* Use cases (UseCases.astro): one view each, with its SQL, what it reads and the job it replaces. Two to a row
+   where they fit; the SQL blocks stretch so each row's "Reads" lines up. */
+.dw-usecases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.sl-markdown-content .dw-usecases > * {
+  margin-top: 0;
+}
 .dw-usecase {
-  border-top: 3px solid var(--dw-amber);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.4rem 1.4rem 1.25rem;
+}
+.sl-markdown-content .dw-usecase > *,
+.sl-markdown-content .dw-usecase header > * {
+  margin: 0;
+}
+.sl-markdown-content .dw-usecase .dw-usecase-kind {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-color-text-accent);
+}
+.sl-markdown-content .dw-usecase h3 {
+  margin-top: 0.35rem;
+  font-size: 1.2rem;
+}
+.sl-markdown-content .dw-usecase .dw-usecase-summary {
+  margin-top: 0.5rem;
+  font-size: 0.93rem;
+  color: var(--sl-color-gray-2);
+}
+.dw-usecase .expressive-code {
+  --ec-codeFontSize: 0.8rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.dw-usecase .expressive-code .frame {
+  flex: 1;
+}
+.dw-usecase .expressive-code pre {
+  height: 100%;
+}
+.dw-usecase-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1rem;
+  font-size: 0.86rem;
+}
+.dw-usecase-meta > div {
+  display: contents;
+}
+.sl-markdown-content .dw-usecase-meta :is(dt, dd) {
+  margin: 0;
+}
+.dw-usecase-meta dt {
+  font-weight: 600;
+  color: var(--sl-color-gray-3);
+}
+.dw-usecase-meta dd {
+  color: var(--sl-color-gray-2);
+}
+.sl-markdown-content .dw-usecase-link {
+  align-self: flex-start;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+/* On a phone the SQL runs to the card's edges, its text in line with the card's, so the longest line (43
+   characters) fits at 390 px without wrapping. The copy button takes the end of each block's first line. */
+@media (max-width: 30rem) {
+  .dw-usecase {
+    padding: 1.2rem 1rem 1.1rem;
+  }
+  .dw-usecase .expressive-code {
+    --ec-codeFontSize: 0.75rem;
+    --ec-codePadInl: 1rem;
+    --ec-brdRad: 0px;
+    margin-inline: -1rem;
+  }
+  .dw-usecase .expressive-code pre {
+    border-inline-width: 0;
+  }
+}
+/* At 360 px the 43-character lines need a slightly smaller font. */
+@media (max-width: 24rem) {
+  .dw-usecase .expressive-code {
+    --ec-codeFontSize: 0.7rem;
+  }
 }
 
 /* The comparison: DuckWake's column picked out. */
