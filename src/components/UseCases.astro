@@ -1,0 +1,111 @@
+---
+// The home page's use cases: each is one view, shown with its SQL, what it reads, and the job it replaces.
+// Every query here is one DuckWake accepts (docs/sql.md in duckwake/duckwake: windows, aggregates, lookup joins,
+// views over lake tables; dbt/README.md for `source()`); keep them in step when the SQL surface changes.
+import { Code } from '@astrojs/starlight/components';
+
+interface UseCase {
+  kind: string;
+  title: string;
+  /** HTML. */
+  summary: string;
+  code: string;
+  /** HTML: the inputs the view reads. */
+  reads: string;
+  /** What teams run today instead. */
+  instead: string;
+  link: { href: string; text: string };
+}
+
+const cases: UseCase[] = [
+  {
+    kind: 'Live dashboards',
+    title: 'Revenue per game, each minute',
+    summary:
+      'A minute is written when the watermark passes its end, 30 seconds later by default, and never changes after that.',
+    code: `SELECT window_start, game_id,
+  count(*) AS purchases,
+  sum(amount) AS revenue
+FROM TUMBLE(sales, ts, INTERVAL 1 MINUTE)
+GROUP BY ALL`,
+    reads: 'Kafka topic <code>sales</code>',
+    instead: 'an hourly batch job',
+    link: { href: '/docs/reference/sql/#windows', text: 'Windows' },
+  },
+  {
+    kind: 'Service levels',
+    title: 'p50 and p99 latency per endpoint',
+    summary:
+      'Exact percentiles over the last 5 minutes, updated every minute: the same numbers a DuckDB query over the raw requests gives.',
+    code: `SELECT window_end, endpoint,
+  count(*) AS requests,
+  quantile_cont(latency_ms, [0.5, 0.99])
+    AS p50_p99
+FROM HOP(requests, ts, INTERVAL 5 MINUTE,
+         INTERVAL 1 MINUTE)
+GROUP BY ALL`,
+    reads: 'Kafka topic <code>requests</code>',
+    instead: 'percentiles estimated from histogram buckets',
+    link: { href: '/docs/reference/sql/#aggregates', text: 'Aggregates' },
+  },
+  {
+    kind: 'Enrichment',
+    title: 'Active players per country, each hour',
+    summary:
+      'Each event is looked up in the player table in your lake as it is processed, and counted under the country the player has then.',
+    code: `SELECT c.window_start, p.country,
+  count(DISTINCT c.player_id) AS players
+FROM TUMBLE(clicks, ts, INTERVAL 1 HOUR) c
+JOIN crm.players p
+  ON p.player_id = c.player_id
+GROUP BY ALL`,
+    reads: 'Kafka topic <code>clicks</code>, lake table <code>crm.players</code>',
+    instead: 'a consumer that looks up each event',
+    link: { href: '/docs/reference/sql/#views-over-lake-tables-and-other-views', text: 'Lookup joins' },
+  },
+  {
+    kind: 'Incremental marts',
+    title: 'Lifetime value per customer',
+    summary:
+      'A dbt model over a table your app writes. A refund that updates or deletes an order moves that customer’s totals in the next epoch.',
+    code: `-- models/marts/customer_ltv.sql
+{{ config(materialized='streaming_view') }}
+SELECT customer_id,
+  count(*) AS orders,
+  sum(total) AS lifetime_value
+FROM {{ source('shop', 'orders') }}
+GROUP BY customer_id`,
+    reads: 'lake table <code>shop.orders</code>',
+    instead: 'a full rebuild every night',
+    link: { href: '/docs/guides/dbt/', text: 'dbt-duckwake' },
+  },
+];
+---
+
+<div class="dw-usecases">
+  {
+    cases.map((c) => (
+      <article class="dw-usecase">
+        <header>
+          <p class="dw-usecase-kind">{c.kind}</p>
+          <h3>{c.title}</h3>
+          <p class="dw-usecase-summary" set:html={c.summary} />
+        </header>
+        <Code code={c.code} lang="sql" wrap />
+        <dl class="dw-usecase-meta">
+          <div>
+            <dt>Reads</dt>
+            <dd set:html={c.reads} />
+          </div>
+          <div>
+            <dt>Instead of</dt>
+            <dd>{c.instead}</dd>
+          </div>
+        </dl>
+        <a class="dw-usecase-link" href={c.link.href}>
+          {c.link.text} <span aria-hidden="true">→</span>
+        </a>
+      </article>
+    ))
+  }
+</div>
