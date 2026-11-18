@@ -223,7 +223,7 @@ h1#_top {
 .sl-markdown-content a:not(.sl-link-button, .sl-link-card, [role='tab']):hover {
   text-decoration-color: currentColor;
 }
-.sl-markdown-content :not(pre) > code {
+.sl-markdown-content :not(pre) > code:not(:where(.not-content *)) {
   font-size: 0.85em;
   padding: 0.1em 0.35em;
   border-radius: 0.35rem;
@@ -232,15 +232,16 @@ h1#_top {
   color: var(--sl-color-gray-1);
   overflow-wrap: anywhere;
 }
-.sl-markdown-content :is(ul, ol) li + li {
+.sl-markdown-content :is(ul, ol) li + li:not(:where(.not-content *)) {
   margin-top: 0.35rem;
 }
 .sl-markdown-content hr {
   border-color: var(--sl-color-hairline);
 }
 
-/* Tables: rounded, a light header row, hairlines between rows only. */
-.sl-markdown-content table {
+/* Tables: rounded, a light header row, hairlines between rows only. Like Starlight's own content styles, these
+   leave alone anything inside `.not-content` (the animated scenes draw their own tables). */
+.sl-markdown-content table:not(:where(.not-content *)) {
   display: block;
   overflow-x: auto;
   border: 1px solid var(--sl-color-hairline-light);
@@ -249,16 +250,16 @@ h1#_top {
   border-spacing: 0;
   font-size: 0.9rem;
 }
-.sl-markdown-content :is(th, td) {
+.sl-markdown-content :is(th, td):not(:where(.not-content *)) {
   border: 0;
   border-bottom: 1px solid var(--sl-color-hairline);
   padding: 0.6rem 0.9rem;
   vertical-align: top;
 }
-.sl-markdown-content tr:last-child td {
+.sl-markdown-content tr:last-child td:not(:where(.not-content *)) {
   border-bottom: 0;
 }
-.sl-markdown-content th {
+.sl-markdown-content th:not(:where(.not-content *)) {
   background: var(--dw-table-head);
   color: var(--sl-color-white);
   font-weight: 600;
@@ -347,6 +348,6 @@ starlight-toc a[aria-current='true'] {
 }
 
 /* A table's first column names the row: keep short names on one line. */
-.sl-markdown-content :is(th, td):first-child {
+.sl-markdown-content :is(th, td):first-child:not(:where(.not-content *)) {
   min-width: 9rem;
 }

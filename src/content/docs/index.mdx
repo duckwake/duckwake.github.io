@@ -17,6 +17,9 @@ hero:
 ---
 
 import { LinkButton, Tabs, TabItem } from '@astrojs/starlight/components';
+import EngineFlow from '../../components/motion/EngineFlow.astro';
+import ExactlyOnce from '../../components/motion/ExactlyOnce.astro';
+import ChangeFeed from '../../components/motion/ChangeFeed.astro';
 
 <div class="dw-works">
   <span class="dw-works-label">Works with</span>
@@ -28,28 +31,7 @@ import { LinkButton, Tabs, TabItem } from '@astrojs/starlight/components';
 <h2 class="dw-h2">From topic to table in one transaction</h2>
 <p class="dw-sub">A worker reads new events, computes only what changed, and commits the view's rows, its state and the offsets it read together. Nothing in between can lose or repeat a row.</p>
 
-<div class="dw-arch">
-  <div class="dw-arch-col">
-    <p class="dw-arch-title">In</p>
-    <div class="dw-arch-box"><strong>Kafka topics</strong><span>JSON events, with SASL and TLS</span></div>
-    <div class="dw-arch-box"><strong>Lake tables and views</strong><span>read through their change feed</span></div>
-  </div>
-  <div class="dw-arch-arrow" aria-hidden="true"></div>
-  <div class="dw-arch-col dw-arch-core">
-    <p class="dw-arch-title">DuckWake worker</p>
-    <div class="dw-arch-steps">
-      <div><b>1</b>Read<span>the next batch of events</span></div>
-      <div><b>2</b>Stage<span>only what changed, as an incremental circuit</span></div>
-      <div><b>3</b>Commit<span>rows, state and offsets in one DuckLake transaction</span></div>
-    </div>
-  </div>
-  <div class="dw-arch-arrow" aria-hidden="true"></div>
-  <div class="dw-arch-col">
-    <p class="dw-arch-title">Out</p>
-    <div class="dw-arch-box"><strong>DuckLake tables</strong><span>on local disk or S3</span></div>
-    <div class="dw-arch-box"><strong>Any DuckDB client</strong><span>dashboards, notebooks, dbt, other views</span></div>
-  </div>
-</div>
+<EngineFlow caption="One epoch of a view that counts clicks per game. A view can also read lake tables and other views through their change feed, and any DuckDB client reads the table it keeps." />
 </section>
 
 <section class="dw-feature">
@@ -93,15 +75,10 @@ GROUP BY ALL
 <h2 class="dw-h2">Exactly once, and you can check it</h2>
 <p>Every epoch is one DuckLake transaction, so after a crash the worker resumes from the last commit and computes the same epoch again. <code>duckwake_verify</code> runs the view's SQL as one batch query over everything it has read and compares it with the view's table.</p>
 <p>Every test suite ends with that check, including the ones that kill workers in the middle of a commit.</p>
+<p><a href="/docs/start/concepts/#exactly-once">How exactly once works</a></p>
 </div>
 <div class="dw-feature-visual">
-
-```sql
-FROM duckwake_verify('clicks_per_min');
--- VERIFY OK: clicks_per_min output matches batch recomputation
---            over all 90003 events (epoch 43)
-```
-
+<ExactlyOnce caption="A worker killed mid-epoch commits nothing; the worker that takes over computes the same epoch from the same offsets." />
 </div>
 </section>
 
@@ -110,18 +87,10 @@ FROM duckwake_verify('clicks_per_min');
 <p class="dw-kicker">Compose</p>
 <h2 class="dw-h2">Views over views, and over your lake</h2>
 <p>A view can read another view's table, or any DuckLake table, through its change feed. It starts from the rows already there, then follows inserts, updates and deletes, so filters, <code>DISTINCT</code> and <code>GROUP BY</code> stay correct as the data changes.</p>
-<p><a href="/docs/start/concepts/">Concepts</a></p>
+<p><a href="/docs/start/concepts/#views-over-views-and-lake-tables">How views read the lake</a></p>
 </div>
 <div class="dw-feature-visual">
-
-```sql
--- Hourly totals from the per-minute view, kept up to date
-SELECT game_id, time_bucket(INTERVAL 1 HOUR, window_start) AS hour,
-       sum(revenue) AS revenue
-FROM analytics.clicks_per_min
-GROUP BY ALL
-```
-
+<ChangeFeed caption="A view over a table your app writes: it starts from the rows already there, then follows the table’s change feed, where an update is the old row out and the new one in." />
 </div>
 </section>
 

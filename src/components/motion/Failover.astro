@@ -1,0 +1,62 @@
+---
+// Workers, failover and rebalancing, animated (src/scripts/motion/failover.ts): workers heartbeat into the lake;
+// when one stops for --lease-timeout the others take its views, each from its last checkpoint; when it joins
+// again, rebalancing hands it views until loads even out. The markup is the first frame.
+import Scene from './Scene.astro';
+import { START, STEPS } from '../../scripts/motion/failover-data';
+
+interface Props {
+  caption?: string;
+}
+const {
+  caption = 'Three workers share six views. A worker that stops heartbeating for <code>--lease-timeout</code> loses its views to the live ones, and each view continues from its last checkpoint; a worker that joins gets views as rebalancing evens out the load.',
+} = Astro.props;
+const most = Math.max(...Object.values(START).map((v) => v.length)) + 2;
+---
+
+<Scene name="failover" caption={caption}>
+  <div class="dw-fo">
+    <div class="dw-fo-workers">
+      {
+        Object.entries(START).map(([w, views]) => (
+          <div class="dw-fo-worker" data-w={w}>
+            <div class="dw-fo-whead">
+              <span class="dw-fo-beat" data-beat>
+                <i />
+              </span>
+              <strong>{w}</strong>
+              <span class="dw-fo-wstate" data-wstate>running</span>
+            </div>
+            <span class="dw-fo-load" title="load">
+              <i data-load style={`width: ${(views.length / most) * 100}%`} />
+            </span>
+            <ul class="dw-fo-views" data-views>
+              {views.map((v) => (
+                <li class="dw-fo-view" data-view={v}>{v}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+    <div class="dw-fo-lake">
+      <p class="dw-label">DuckLake catalog: last heartbeat</p>
+      <div class="dw-fo-hbs">
+        {
+          Object.keys(START).map((w) => (
+            <span class="dw-fo-hb" data-hb={w}>
+              <b>{w}</b> <span data-age>1 s ago</span>
+            </span>
+          ))
+        }
+      </div>
+    </div>
+    <p class="dw-fo-status"><b data-stepno>1</b><span data-status set:html={STEPS[0]} /></p>
+  </div>
+</Scene>
+
+<script>
+  import { mount } from '../../scripts/motion/scene';
+  import { failover } from '../../scripts/motion/failover';
+  mount('failover', failover);
+</script>

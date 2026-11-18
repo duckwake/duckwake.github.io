@@ -1,0 +1,87 @@
+---
+// A view over a lake table, animated (src/scripts/motion/changefeed.ts, with the story's data in
+// changefeed-data.ts): the view backfills the rows the table holds when it is created, then follows the table's
+// change feed, taking updates and deletes as retractions, so its filter and GROUP BY stay correct. The markup is
+// the last frame.
+import Scene from './Scene.astro';
+import { SQL, STEPS, TABLE, VIEW, final, query } from '../../scripts/motion/changefeed-data';
+
+interface Props {
+  caption?: string;
+}
+const {
+  caption = `A view over <code>${TABLE}</code>, a table your app writes. It starts from the rows already there, then reads the table’s change feed each epoch: an insert counts +1, a delete −1, and an update is both. A view over another view’s table works the same way.`,
+} = Astro.props;
+const end = final();
+const sign = (w: number) => (w > 0 ? '+1' : '−1');
+---
+
+<Scene name="changefeed" caption={caption}>
+  <div class="dw-cf">
+    <p class="dw-cf-sql"><span class="dw-label">View <code>{VIEW}</code></span><code>{SQL}</code></p>
+
+    <div class="dw-cf-src dw-cf-panel">
+      <p class="dw-cf-name">
+        <span>{TABLE}</span><span class="dw-cf-snap">snapshot <b data-snap>{end.snapshot}</b></span>
+      </p>
+      <table class="dw-cf-table">
+        <thead><tr><th>player_id</th><th>country</th><th>vip</th></tr></thead>
+        <tbody data-src>
+          {
+            end.table.map((r) => (
+              <tr data-id={r.id}>
+                <td>{r.id}</td>
+                <td data-col="country">{r.country}</td>
+                <td data-col="vip">{String(r.vip)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="dw-cf-feed">
+      <p class="dw-label" data-feed-label>Change feed, snapshot {end.snapshot - 1} to {end.snapshot}</p>
+      <div class="dw-cf-chips" data-chips>
+        {
+          end.changes.map((c) => (
+            <span class="dw-cf-chip" data-weight={c.weight}>
+              <b>{sign(c.weight)}</b>
+              <span>
+                {c.row.id} {c.row.country} {String(c.row.vip)}
+              </span>
+              <small>{c.type}</small>
+            </span>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="dw-cf-out dw-cf-panel">
+      <p class="dw-cf-name">
+        <span>{VIEW}</span><span class="dw-cf-snap">read to <b data-pos>{end.snapshot}</b></span>
+      </p>
+      <table class="dw-cf-table">
+        <thead><tr><th>country</th><th>vips</th></tr></thead>
+        <tbody data-out>
+          {
+            query(end.table).map(([country, n]) => (
+              <tr data-group={country}>
+                <td>{country}</td>
+                <td data-n>{n}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="dw-cf-status"><b data-stepno>{STEPS.length}</b><span data-status set:html={STEPS[STEPS.length - 1]} /></p>
+  </div>
+</Scene>
+
+<script>
+  import { mount } from '../../scripts/motion/scene';
+  import { changefeed } from '../../scripts/motion/changefeed';
+  mount('changefeed', changefeed);
+</script>
