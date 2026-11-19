@@ -34,7 +34,16 @@ them). The server also comes as an image for amd64 and arm64:
 docker pull ghcr.io/duckwake/duckwake:0.2.0
 ```
 
-The extension installs into your own DuckDB 2.0 from this site:
+The extension installs into your own DuckDB 2.0 from DuckDB's community repository, signed, on Linux (amd64,
+arm64) and macOS on Apple Silicon:
+
+```sql
+INSTALL duckwake FROM community;
+LOAD duckwake;
+```
+
+On an Intel Mac, or to install a build of your own, use an extension repository instead: this site's, or one
+built with `scripts/package_extension.sh`. Those builds are not signed, so DuckDB must run with `-unsigned`:
 
 ```sql
 -- duckdb -unsigned
@@ -74,8 +83,8 @@ Each `v*` release of [duckwake/duckwake](https://github.com/duckwake/duckwake/re
 Verify a download with `sha256sum -c SHA256SUMS --ignore-missing`. Versions and what an upgrade needs are in
 [Releases](/docs/project/releasing/) and the [changelog](/docs/project/changelog/).
 
-The extension is not signed yet, so DuckDB must run with `-unsigned` (or
-`SET allow_unsigned_extensions = true`) to load it.
+The extension in a release's repository is not signed, so DuckDB must run with `-unsigned` (or
+`SET allow_unsigned_extensions = true`) to load it. The one from DuckDB's community repository is signed.
 
 ## Next
 
