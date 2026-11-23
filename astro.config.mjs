@@ -65,44 +65,41 @@ export default defineConfig({
           items: [
             { label: 'Live dashboard from Kafka', slug: 'docs/recipes/live-dashboard' },
             { label: 'Revenue from PostgreSQL', slug: 'docs/recipes/postgres-revenue' },
-            { label: 'State from a changelog', slug: 'docs/recipes/changelog-state' },
+            { label: 'Order state from a changelog', slug: 'docs/recipes/changelog-state' },
             { label: 'A pipeline of views', slug: 'docs/recipes/layered-pipeline' },
           ],
         },
+        // Nested groups render as subheads with an indented guide line (brand.css), not as more sections.
         {
           label: 'Work with data',
           items: [
             {
               label: 'Ingest',
               items: [
-                { label: 'Read a Kafka topic', slug: 'docs/data/kafka' },
-                { label: 'Copy database tables', slug: 'docs/data/databases' },
-                { label: 'Changelogs and the latest row', slug: 'docs/data/changelogs' },
+                { label: 'Kafka topics', slug: 'docs/data/kafka' },
+                { label: 'Database tables', slug: 'docs/data/databases' },
+                { label: 'Changelogs and upserts', slug: 'docs/data/changelogs' },
               ],
             },
             {
               label: 'Process',
               items: [
                 { label: 'Windows and aggregates', slug: 'docs/data/windows' },
-                { label: 'Views over tables and views', slug: 'docs/data/views-over-views' },
+                { label: 'Views over tables', slug: 'docs/data/views-over-views' },
               ],
             },
             {
               label: 'Serve',
-              items: [{ label: "Query a view's results", slug: 'docs/data/query-results' }],
+              items: [{ label: 'Query results', slug: 'docs/data/query-results' }],
             },
             {
               label: 'Manage',
               items: [
-                { label: 'Manage views', slug: 'docs/data/manage-views' },
-                { label: 'Change a view or a source', slug: 'docs/data/change-views' },
+                { label: 'Run and check views', slug: 'docs/data/manage-views' },
+                { label: 'Change views and sources', slug: 'docs/data/change-views' },
               ],
             },
           ],
-        },
-        {
-          label: 'Guides',
-          items: [{ label: 'dbt-duckwake', slug: 'docs/guides/dbt' }],
         },
         {
           label: 'Reference',
@@ -111,6 +108,7 @@ export default defineConfig({
             { label: 'CLI and playground', slug: 'docs/reference/cli' },
             { label: 'Server: duckwaked', slug: 'docs/reference/server' },
             { label: 'Extension', slug: 'docs/reference/extension' },
+            { label: 'dbt-duckwake', slug: 'docs/guides/dbt' },
           ],
         },
         {
@@ -122,6 +120,7 @@ export default defineConfig({
         },
         {
           label: 'Project',
+          collapsed: true,
           items: [
             { label: 'Roadmap', slug: 'docs/project/roadmap' },
             { label: 'Changelog', slug: 'docs/project/changelog' },

@@ -100,31 +100,77 @@ site-search button[data-open-modal] {
   background: var(--sl-color-gray-6);
 }
 
-/* Sidebar: small section labels, plain links, the current page tinted with an accent bar. */
+/* Sidebar: top-level groups are small uppercase section labels; a nested group is a sentence-case subhead whose
+   links sit behind a thin guide line, so the two levels never look alike. Carets show only where a group can be
+   folded (top level), on hover or when it is folded. The current page is tinted, with an accent bar. */
 .sidebar-pane {
   border-inline-end: 1px solid var(--sl-color-hairline) !important;
 }
 .sidebar-content .top-level > li + li {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 .sidebar-content .large {
   font-family: var(--sl-font);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--sl-color-gray-3);
+}
+.sidebar-content summary {
+  padding-block: 0.2rem;
 }
 .sidebar-content summary .caret {
   color: var(--sl-color-gray-4);
   width: 1rem;
   height: 1rem;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.sidebar-content summary:hover .caret,
+.sidebar-content summary:focus-visible .caret,
+.sidebar-content details:not([open]) > summary .caret {
+  opacity: 1;
 }
 .sidebar-content ul ul li {
   border-inline-start: 0;
   margin-inline-start: 0;
   padding-inline-start: 0;
 }
+
+/* Nested groups: subhead, then links indented behind a guide line. */
+.sidebar-content ul ul details {
+  margin-top: 0.6rem;
+}
+.sidebar-content ul ul li:first-child > details {
+  margin-top: 0.15rem;
+}
+.sidebar-content ul ul details > summary {
+  padding: 0.15rem 0.6rem;
+  cursor: default;
+  pointer-events: none;
+}
+.sidebar-content ul ul details > summary .large {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--sl-color-gray-1);
+}
+.sidebar-content ul ul details > summary .caret {
+  display: none;
+}
+.sidebar-content ul ul details > ul {
+  margin: 0.15rem 0 0 0.6rem;
+  border-inline-start: 1px solid var(--sl-color-hairline-light);
+}
+.sidebar-content ul ul details > ul a {
+  margin-inline-start: -1px;
+  padding-inline-start: 0.85rem;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
 .sidebar-content a {
   font-size: 0.875rem;
   color: var(--sl-color-gray-2);
