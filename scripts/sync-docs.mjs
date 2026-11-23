@@ -34,6 +34,18 @@ const pages = {
   'docs/releasing.md': 'docs/project/releasing',
   'CHANGELOG.md': 'docs/project/changelog',
   'dbt/README.md': 'docs/guides/dbt',
+  'docs/recipes/live-dashboard.md': 'docs/recipes/live-dashboard',
+  'docs/recipes/postgres-revenue.md': 'docs/recipes/postgres-revenue',
+  'docs/recipes/changelog-state.md': 'docs/recipes/changelog-state',
+  'docs/recipes/layered-pipeline.md': 'docs/recipes/layered-pipeline',
+  'docs/guides/kafka.md': 'docs/data/kafka',
+  'docs/guides/databases.md': 'docs/data/databases',
+  'docs/guides/changelogs.md': 'docs/data/changelogs',
+  'docs/guides/windows.md': 'docs/data/windows',
+  'docs/guides/views-over-views.md': 'docs/data/views-over-views',
+  'docs/guides/query-results.md': 'docs/data/query-results',
+  'docs/guides/manage-views.md': 'docs/data/manage-views',
+  'docs/guides/change-views.md': 'docs/data/change-views',
 };
 // Not on the site: the design documents, docs/internals.md and docs/testing.md, which are for people working on
 // DuckWake itself. Links to them point at the files on GitHub (`rewrite` below).
@@ -49,13 +61,25 @@ const descriptions = {
   'docs/releasing.md': 'Versions, what a release publishes, and how to make one.',
   'CHANGELOG.md': 'Every notable change, release by release.',
   'dbt/README.md': 'Kafka sources and streaming views as dbt models, with dbt-duckdb.',
+  'docs/recipes/live-dashboard.md': 'Purchases from a Kafka topic counted per game and minute, with late events kept apart.',
+  'docs/recipes/postgres-revenue.md': 'A PostgreSQL table copied through a replication slot, and daily revenue that follows its updates and deletes.',
+  'docs/recipes/changelog-state.md': 'A topic of order updates turned into one row per order, and a count by status that follows it.',
+  'docs/recipes/layered-pipeline.md': 'Three views in a row, staging to statistics to popular pages, each a table of its own.',
+  'docs/guides/kafka.md': 'Register a topic, choose its event time and watermark, and handle malformed messages and authentication.',
+  'docs/guides/databases.md': 'Keep copies of PostgreSQL and MySQL tables in the lake, from the database\'s own change stream.',
+  'docs/guides/changelogs.md': 'Upsert views: one row per key from a topic of updates, Debezium topics included.',
+  'docs/guides/windows.md': 'Tumbling and hopping windows, when a window is written, late events, running totals and aggregates.',
+  'docs/guides/views-over-views.md': 'Change feeds, lookups, backfill and windows over lake tables, and chains of views.',
+  'docs/guides/query-results.md': 'Read a view\'s table from any DuckDB, see what a reader sees, and read earlier versions.',
+  'docs/guides/manage-views.md': 'Start, pause, check, reset and drop views, and what to do when one fails.',
+  'docs/guides/change-views.md': 'Change how a view runs, what it computes, or a source\'s columns, and redeploy safely.',
 };
 
 // Folders copied next to the pages that use them (their images keep their relative paths).
 const assets = {};
 
 // The generated tree is rebuilt from scratch, so a page removed upstream disappears here too.
-for (const dir of ['docs/reference', 'docs/operations', 'docs/project', 'docs/design']) {
+for (const dir of ['docs/reference', 'docs/operations', 'docs/project', 'docs/design', 'docs/recipes', 'docs/data']) {
   rmSync(path.join(CONTENT, dir), { recursive: true, force: true });
 }
 rmSync(path.join(CONTENT, 'docs/guides/dbt.md'), { force: true });

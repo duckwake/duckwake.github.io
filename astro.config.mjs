@@ -61,6 +61,46 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Recipes',
+          items: [
+            { label: 'Live dashboard from Kafka', slug: 'docs/recipes/live-dashboard' },
+            { label: 'Revenue from PostgreSQL', slug: 'docs/recipes/postgres-revenue' },
+            { label: 'State from a changelog', slug: 'docs/recipes/changelog-state' },
+            { label: 'A pipeline of views', slug: 'docs/recipes/layered-pipeline' },
+          ],
+        },
+        {
+          label: 'Work with data',
+          items: [
+            {
+              label: 'Ingest',
+              items: [
+                { label: 'Read a Kafka topic', slug: 'docs/data/kafka' },
+                { label: 'Copy database tables', slug: 'docs/data/databases' },
+                { label: 'Changelogs and the latest row', slug: 'docs/data/changelogs' },
+              ],
+            },
+            {
+              label: 'Process',
+              items: [
+                { label: 'Windows and aggregates', slug: 'docs/data/windows' },
+                { label: 'Views over tables and views', slug: 'docs/data/views-over-views' },
+              ],
+            },
+            {
+              label: 'Serve',
+              items: [{ label: "Query a view's results", slug: 'docs/data/query-results' }],
+            },
+            {
+              label: 'Manage',
+              items: [
+                { label: 'Manage views', slug: 'docs/data/manage-views' },
+                { label: 'Change a view or a source', slug: 'docs/data/change-views' },
+              ],
+            },
+          ],
+        },
+        {
           label: 'Guides',
           items: [{ label: 'dbt-duckwake', slug: 'docs/guides/dbt' }],
         },
